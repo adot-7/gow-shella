@@ -12,9 +12,9 @@ func main() {
 	loop := true
 	for loop {
 		fmt.Print("$ ")
-		acceptableCommands := make([]string, 0)
-		acceptableCommands = append(acceptableCommands, "exit")
-		acceptableCommands = append(acceptableCommands, "echo")
+		builtinCommands := []string{"exit", "echo", "type"}
+		// acceptableCommands = append(acceptableCommands, "exit")
+		// acceptableCommands = append(acceptableCommands, "echo")
 		reader := bufio.NewReader(os.Stdin)
 		input, err := reader.ReadString('\n')
 		if err != nil {
@@ -22,7 +22,6 @@ func main() {
 		}
 		input = strings.TrimSuffix(input, "\n")
 		inputs := strings.SplitN(input, " ", 2)
-
 		command := inputs[0]
 		// command = strings.TrimSuffix(command, " ")
 		// arguments, err := reader.ReadString('\n')
@@ -30,21 +29,30 @@ func main() {
 		// argumentsSlice := strings.Split(arguments, " ")
 		// argumentsSlice = append(argumentsSlice, argumentsSlice...)
 		// fmt.Printf("%s\n%s\n", command, arguments)
-		if !slices.Contains(acceptableCommands, command) {
-			fmt.Printf("%s: command not found\n", command)
-			continue
+		// if !slices.Contains(acceptableCommands, command) {
+		// 	fmt.Printf("%s: command not found\n", command)
+		// 	continue
+		// }
+		arguments := ""
+		if len(inputs) == 2 {
+			arguments = inputs[1]
 		}
+
 		switch command {
 		case "exit":
 			loop = false
 		case "echo":
-			if len(inputs) == 2 {
-				arguments := inputs[1]
-				fmt.Printf("%s\n", arguments)
+			fmt.Printf("%s\n", arguments)
+		case "type":
+			if slices.Contains(builtinCommands, arguments) {
+				fmt.Printf("%s is a shell builtin\n", arguments)
 			} else {
-				fmt.Printf("\n")
+				fmt.Printf("%s: not found\n", arguments)
 			}
-
+		case "":
+			continue
+		default:
+			fmt.Printf("%s: command not found\n", command)
 		}
 	}
 }
