@@ -4,18 +4,17 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"slices"
 	"strings"
 )
 
 func main() {
 	loop := true
+	builtinCommands := []string{"exit", "echo", "type"}
+	reader := bufio.NewReader(os.Stdin)
 	for loop {
 		fmt.Print("$ ")
-		builtinCommands := []string{"exit", "echo", "type"}
 		// acceptableCommands = append(acceptableCommands, "exit")
 		// acceptableCommands = append(acceptableCommands, "echo")
-		reader := bufio.NewReader(os.Stdin)
 		input, err := reader.ReadString('\n')
 		if err != nil {
 			panic(err)
@@ -44,11 +43,7 @@ func main() {
 		case "echo":
 			fmt.Printf("%s\n", arguments)
 		case "type":
-			if slices.Contains(builtinCommands, arguments) {
-				fmt.Printf("%s is a shell builtin\n", arguments)
-			} else {
-				fmt.Printf("%s: not found\n", arguments)
-			}
+			handleType(builtinCommands, arguments)
 		case "":
 			continue
 		default:
