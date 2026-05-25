@@ -52,7 +52,10 @@ func main() {
 			}
 			fmt.Printf("%s\n", cwd)
 		case "cd":
-
+			err := os.Chdir(arguments)
+			if err != nil {
+				fmt.Printf("cd:%s\n", err.Error()[5:])
+			}
 		case "":
 			continue
 		default:
