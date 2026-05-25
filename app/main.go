@@ -20,7 +20,10 @@ func main() {
 			panic(err)
 		}
 		input = strings.TrimSuffix(input, "\n")
-		inputs := strings.SplitN(input, " ", 2)
+
+		// inputs := strings.SplitN(input, " ", 2)
+		inputs := tokenize(input)
+		// fmt.Println(inputs[0])
 		command := inputs[0]
 		// command = strings.TrimSuffix(command, " ")
 		// arguments, err := reader.ReadString('\n')
@@ -32,18 +35,23 @@ func main() {
 		// 	fmt.Printf("%s: command not found\n", command)
 		// 	continue
 		// }
-		arguments := ""
-		if len(inputs) == 2 {
-			arguments = inputs[1]
+		// arguments := ""
+		var arguments []string
+		if len(inputs) > 1 {
+			arguments = inputs[1:]
 		}
-		arguments = strings.TrimSpace(arguments)
+		// arguments = strings.TrimSpace(arguments)
+		// if strings.HasPrefix(command, "\"") {
+		// 	command =
+		// }
 		switch command {
 		case "exit":
 			loop = false
 		case "echo":
-			argumentsSlice := tokenize(arguments)
-			arguments = strings.Join(argumentsSlice, " ")
-			fmt.Println(arguments)
+			// argumentsSlice := tokenize(arguments)
+			// arguments = strings.Join(argumentsSlice, " ")
+			result := strings.Join(arguments, " ")
+			fmt.Println(result)
 		case "type":
 			handleType(builtinCommands, arguments)
 		case "pwd":
@@ -54,13 +62,17 @@ func main() {
 			}
 			fmt.Printf("%s\n", cwd)
 		case "cd":
-			dir := arguments
-			if arguments == "~" {
+			if len(arguments) > 1 {
+				fmt.Println("cd: too many arguments")
+			}
+			argument := arguments[0]
+			dir := argument
+			if argument == "~" {
 				dir = os.Getenv("HOME")
 			}
 			err := os.Chdir(dir)
 			if err != nil {
-				fmt.Printf("cd: %s: No such file or directory\n", arguments)
+				fmt.Printf("cd: %s: No such file or directory\n", argument)
 			}
 		case "":
 			continue

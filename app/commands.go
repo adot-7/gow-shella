@@ -9,21 +9,22 @@ import (
 	"strings"
 )
 
-func handleType(builtinCommands []string, argument string) {
-	if slices.Contains(builtinCommands, argument) {
-		fmt.Printf("%s is a shell builtin\n", argument)
-		return
+func handleType(builtinCommands []string, argumentSlice []string) {
+	for _, argument := range argumentSlice {
+		if slices.Contains(builtinCommands, argument) {
+			fmt.Printf("%s is a shell builtin\n", argument)
+			return
+		}
+		fileinfo, directory := isExecutable(argument)
+		if fileinfo != nil {
+			fmt.Printf("%s is %s/%s\n", argument, directory, fileinfo.Name())
+			return
+		}
+		fmt.Printf("%s: not found\n", argument)
 	}
-	fileinfo, directory := isExecutable(argument)
-	if fileinfo != nil {
-		fmt.Printf("%s is %s/%s\n", argument, directory, fileinfo.Name())
-		return
-	}
-	fmt.Printf("%s: not found\n", argument)
 }
 
-func executeCommand(command string, argument string) {
-	argumentSlice := tokenize(argument)
+func executeCommand(command string, argumentSlice []string) {
 	fileinfo, _ := isExecutable(command)
 	if fileinfo == nil {
 		fmt.Printf("%s: command not found\n", command)
