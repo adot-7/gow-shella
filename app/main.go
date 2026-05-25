@@ -54,7 +54,7 @@ func main() {
 		case "cd":
 			err := os.Chdir(arguments)
 			if err != nil {
-				fmt.Printf("cd:%s\n", err.Error()[5:])
+				fmt.Printf("cd: %s: No such file or directory\n", arguments)
 			}
 		case "":
 			continue
