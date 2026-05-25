@@ -52,7 +52,11 @@ func main() {
 			}
 			fmt.Printf("%s\n", cwd)
 		case "cd":
-			err := os.Chdir(arguments)
+			dir := arguments
+			if arguments == "~" {
+				dir = os.Getenv("HOME")
+			}
+			err := os.Chdir(dir)
 			if err != nil {
 				fmt.Printf("cd: %s: No such file or directory\n", arguments)
 			}
