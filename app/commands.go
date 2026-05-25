@@ -44,9 +44,18 @@ func tokenize(argument string) []string {
 	var tokens []string
 	var current strings.Builder
 	isQuotes := false
+	isbackslash := false
 	var quote rune
+
 	for _, ch := range argument {
+		if isbackslash {
+			current.WriteRune(ch)
+			isbackslash = !isbackslash
+			continue
+		}
 		switch {
+		case ch == '\\':
+			isbackslash = !isbackslash
 		case ch == '"' || ch == '\'':
 			if ch == quote || quote == 0 {
 				isQuotes = !isQuotes
