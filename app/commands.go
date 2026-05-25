@@ -44,10 +44,16 @@ func tokenize(argument string) []string {
 	var tokens []string
 	var current strings.Builder
 	isQuotes := false
+	var quote rune
 	for _, ch := range argument {
 		switch {
 		case ch == '"' || ch == '\'':
-			isQuotes = !isQuotes
+			if ch == quote || quote == 0 {
+				isQuotes = !isQuotes
+			} else {
+				current.WriteRune(ch)
+			}
+			quote = ch
 		case ch == ' ' && !isQuotes: //if its a space and we are NOT in quotes
 			if current.Len() > 0 {
 				tokens = append(tokens, current.String())
