@@ -50,10 +50,11 @@ func tokenize(argument string) []string {
 		case ch == '"' || ch == '\'':
 			if ch == quote || quote == 0 {
 				isQuotes = !isQuotes
+				quote = ch
 			} else {
 				current.WriteRune(ch)
 			}
-			quote = ch
+
 		case ch == ' ' && !isQuotes: //if its a space and we are NOT in quotes
 			if current.Len() > 0 {
 				tokens = append(tokens, current.String())
