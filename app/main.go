@@ -36,7 +36,7 @@ func main() {
 		if len(inputs) == 2 {
 			arguments = inputs[1]
 		}
-
+		arguments = strings.TrimSpace(arguments)
 		switch command {
 		case "exit":
 			loop = false
@@ -47,7 +47,7 @@ func main() {
 		case "":
 			continue
 		default:
-			fmt.Printf("%s: command not found\n", command)
+			executeCommand(command, arguments)
 		}
 	}
 }
