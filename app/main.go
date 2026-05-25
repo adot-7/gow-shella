@@ -51,6 +51,7 @@ func main() {
 				continue
 			}
 			fmt.Printf("%s\n", cwd)
+		case "cd":
 
 		case "":
 			continue
