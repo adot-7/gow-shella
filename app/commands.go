@@ -46,7 +46,7 @@ func tokenize(argument string) []string {
 	isQuotes := false
 	for _, ch := range argument {
 		switch {
-		case ch == '"':
+		case ch == '"' || ch == '\'':
 			isQuotes = !isQuotes
 		case ch == ' ' && !isQuotes: //if its a space and we are NOT in quotes
 			if current.Len() > 0 {

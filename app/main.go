@@ -41,7 +41,9 @@ func main() {
 		case "exit":
 			loop = false
 		case "echo":
-			fmt.Printf("%s\n", arguments)
+			argumentsSlice := tokenize(arguments)
+			arguments = strings.Join(argumentsSlice, " ")
+			fmt.Println(arguments)
 		case "type":
 			handleType(builtinCommands, arguments)
 		case "pwd":
