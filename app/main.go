@@ -9,7 +9,7 @@ import (
 
 func main() {
 	loop := true
-	builtinCommands := []string{"exit", "echo", "type"}
+	builtinCommands := []string{"exit", "echo", "type", "pwd"}
 	reader := bufio.NewReader(os.Stdin)
 	for loop {
 		fmt.Print("$ ")
@@ -44,6 +44,14 @@ func main() {
 			fmt.Printf("%s\n", arguments)
 		case "type":
 			handleType(builtinCommands, arguments)
+		case "pwd":
+			cwd, err := os.Getwd()
+			if err != nil {
+				fmt.Println(err)
+				continue
+			}
+			fmt.Printf("%s\n", cwd)
+
 		case "":
 			continue
 		default:
