@@ -54,7 +54,7 @@ func tokenize(argument string) []string {
 			continue
 		}
 		switch {
-		case ch == '\\':
+		case ch == '\\' && !isQuotes:
 			isbackslash = !isbackslash
 		case ch == '"' || ch == '\'':
 			if ch == quote || quote == 0 {
