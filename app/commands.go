@@ -134,10 +134,10 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = outputWriter
 	cmd.Stderr = os.Stderr
-	err := cmd.Run()
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err.Error())
-	}
+	cmd.Run()
+	// if err != nil {
+	// 	fmt.Fprintln(os.Stderr, err.Error())
+	// }
 }
 
 func tokenize(argument string) []string {
