@@ -30,6 +30,7 @@ func handleExit(outputWriter io.Writer, message string) {
 }
 func handleEcho(argumentSlice []string, outputWriter io.Writer) {
 	result := strings.Join(argumentSlice, " ")
+	result = result + "\n"
 	outputWriter.Write([]byte(result))
 }
 func handlePwd(outputWriter io.Writer) {
@@ -86,8 +87,9 @@ func parseTokens(inputs []string, builtinCommands []string) {
 			}
 			outputWriter, err := os.OpenFile(destination, flags, 0644)
 			if err != nil {
-				print(err.Error())
-				handleExit(os.Stderr, "Error Occured while opening redirect file\n")
+				// handleExit(os.Stderr, err.Error())
+				fmt.Fprintln(os.Stderr, err.Error())
+				return
 			}
 			defer outputWriter.Close()
 			executeCommand(command, arguments, builtinCommands, outputWriter)
