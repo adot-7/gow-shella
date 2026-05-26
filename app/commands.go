@@ -62,6 +62,9 @@ func parseTokens(inputs []string, builtinCommands []string) {
 	isRedirect := false
 	isAppend := false
 	isErrorWriter := false
+	if len(inputs) == 0 {
+		return
+	}
 	command := inputs[0]
 	var arguments []string
 	for i, token := range inputs[1:] {

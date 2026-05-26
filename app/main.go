@@ -2,26 +2,59 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"strings"
+
+	"github.com/chzyer/readline"
 )
+
+var completer = readline.NewPrefixCompleter(
+	readline.PcItem("echo"),
+	readline.PcItem("exit"),
+)
+
+func filterInput(r rune) (rune, bool) {
+	switch r {
+	// block CtrlZ feature
+	case readline.CharCtrlZ:
+		return r, false
+	}
+	return r, true
+}
 
 func main() {
 	loop := true
-
 	builtinCommands := []string{"exit", "echo", "type", "pwd", "cd"}
 	reader := bufio.NewReader(os.Stdin)
+	rl, err := readline.NewEx(&readline.Config{
+		Prompt:              "\033[31m$ \033[0m ",
+		HistoryFile:         "/tmp/gowshella.tmp",
+		AutoComplete:        completer,
+		InterruptPrompt:     "^C",
+		EOFPrompt:           "exit",
+		FuncFilterInputRune: filterInput,
+	})
+	if err != nil {
+		handleExit(os.Stderr, "Could not create readline instance")
+	}
+	defer rl.Close()
+	rl.CaptureExitSignal()
+
 	for loop {
-		fmt.Print("$ ")
+		// fmt.Print("$ ")
+
 		// acceptableCommands = append(acceptableCommands, "exit")
 		// acceptableCommands = append(acceptableCommands, "echo")
-		input, err := reader.ReadString('\n')
+		// input, err := reader.ReadString('\n')
+		input, err := rl.Readline()
 		if err != nil {
-			panic(err)
+			input, err = reader.ReadString('\n')
 		}
-		input = strings.TrimSuffix(input, "\n")
-
+		if len(input) == 0 {
+			input = ""
+		}
+		// input = strings.TrimSuffix(input, "\n")
+		input = strings.TrimSpace(input)
 		// inputs := strings.SplitN(input, " ", 2)
 		inputs := tokenize(input)
 		parseTokens(inputs, builtinCommands)
