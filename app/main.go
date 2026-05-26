@@ -34,6 +34,7 @@ func main() {
 		InterruptPrompt:     "^C",
 		EOFPrompt:           "exit",
 		FuncFilterInputRune: filterInput,
+		Stdout:              os.Stdout,
 	})
 	if err != nil {
 		handleExit(os.Stderr, "Could not create readline instance")
