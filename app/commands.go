@@ -65,7 +65,7 @@ func parseTokens(inputs []string, builtinCommands []string) {
 	command := inputs[0]
 	var arguments []string
 	for i, token := range inputs[1:] {
-		if token == ">" || token == "1>" || token == ">>" || token == "1>>" || token == "2>" {
+		if token == ">" || token == "1>" || token == ">>" || token == "1>>" || token == "2>" || token == "2>>" {
 			if i == len(inputs)-3 {
 				//means second last token
 				//for ["echo", "hello", ">", "file.txt"], len(inputs) is 4,
@@ -73,8 +73,9 @@ func parseTokens(inputs []string, builtinCommands []string) {
 				isRedirect = true
 				if token == ">>" || token == "1>>" {
 					isAppend = true
-				} else if token == "2>" {
+				} else if token == "2>" || token == "2>>" {
 					isErrorWriter = true
+					isAppend = true
 				}
 				continue
 			}
@@ -85,6 +86,9 @@ func parseTokens(inputs []string, builtinCommands []string) {
 		if isRedirect && i == len(inputs)-2 { //last iteration
 			destination := returnDir(token)
 			flags := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+			if isAppend {
+				flags = os.O_APPEND | os.O_CREATE | os.O_WRONLY
+			}
 			if isErrorWriter {
 				errorWriter, err := os.OpenFile(destination, flags, 0644)
 				if err != nil {
@@ -96,9 +100,7 @@ func parseTokens(inputs []string, builtinCommands []string) {
 				executeCommand(command, arguments, builtinCommands, os.Stdout, errorWriter)
 				return
 			}
-			if isAppend {
-				flags = os.O_APPEND | os.O_CREATE | os.O_WRONLY
-			}
+
 			outputWriter, err := os.OpenFile(destination, flags, 0644)
 			if err != nil {
 				// handleExit(os.Stderr, err.Error())
