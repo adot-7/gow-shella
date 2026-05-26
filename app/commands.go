@@ -61,10 +61,11 @@ func returnDir(argument string) string {
 func parseTokens(inputs []string, builtinCommands []string) {
 	isRedirect := false
 	isAppend := false
+	isErrorWriter := false
 	command := inputs[0]
 	var arguments []string
 	for i, token := range inputs[1:] {
-		if token == ">" || token == "1>" || token == ">>" {
+		if token == ">" || token == "1>" || token == ">>" || token == "2>" {
 			if i == len(inputs)-3 {
 				//means second last token
 				//for ["echo", "hello", ">", "file.txt"], len(inputs) is 4,
@@ -72,6 +73,8 @@ func parseTokens(inputs []string, builtinCommands []string) {
 				isRedirect = true
 				if token == ">>" {
 					isAppend = true
+				} else if token == "2>" {
+					isErrorWriter = true
 				}
 				continue
 			}
@@ -82,6 +85,17 @@ func parseTokens(inputs []string, builtinCommands []string) {
 		if isRedirect && i == len(inputs)-2 { //last iteration
 			destination := returnDir(token)
 			flags := os.O_WRONLY | os.O_CREATE | os.O_TRUNC
+			if isErrorWriter {
+				errorWriter, err := os.OpenFile(destination, flags, 0644)
+				if err != nil {
+					// handleExit(os.Stderr, err.Error())
+					fmt.Fprintln(os.Stderr, err.Error())
+					return
+				}
+				defer errorWriter.Close()
+				executeCommand(command, arguments, builtinCommands, os.Stdout, errorWriter)
+				return
+			}
 			if isAppend {
 				flags = os.O_APPEND | os.O_CREATE | os.O_WRONLY
 			}
@@ -92,16 +106,16 @@ func parseTokens(inputs []string, builtinCommands []string) {
 				return
 			}
 			defer outputWriter.Close()
-			executeCommand(command, arguments, builtinCommands, outputWriter)
+			executeCommand(command, arguments, builtinCommands, outputWriter, os.Stderr)
 			return
 		}
 		arguments = append(arguments, token)
 	}
-	executeCommand(command, arguments, builtinCommands, os.Stdout)
+	executeCommand(command, arguments, builtinCommands, os.Stdout, os.Stderr)
 
 }
 
-func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer) {
+func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer) {
 	switch command {
 	case "exit":
 		handleExit(outputWriter, "")
@@ -133,7 +147,7 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 	cmd := exec.Command(command, argumentSlice...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = outputWriter
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = errorWriter
 	cmd.Run()
 	// if err != nil {
 	// 	fmt.Fprintln(os.Stderr, err.Error())
