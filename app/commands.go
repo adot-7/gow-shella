@@ -65,13 +65,13 @@ func parseTokens(inputs []string, builtinCommands []string) {
 	command := inputs[0]
 	var arguments []string
 	for i, token := range inputs[1:] {
-		if token == ">" || token == "1>" || token == ">>" || token == "2>" {
+		if token == ">" || token == "1>" || token == ">>" || token == "1>>" || token == "2>" {
 			if i == len(inputs)-3 {
 				//means second last token
 				//for ["echo", "hello", ">", "file.txt"], len(inputs) is 4,
 				// but we iterate from inputs[1:] so position of > becomes 1 which is len(inputs)-3
 				isRedirect = true
-				if token == ">>" {
+				if token == ">>" || token == "1>>" {
 					isAppend = true
 				} else if token == "2>" {
 					isErrorWriter = true
