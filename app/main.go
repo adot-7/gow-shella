@@ -2,16 +2,21 @@ package main
 
 import (
 	"bufio"
+	"fmt"
+	"io/fs"
 	"os"
 	"strings"
 
 	"github.com/chzyer/readline"
 )
 
-var completer = readline.NewPrefixCompleter(
-	readline.PcItem("echo"),
-	readline.PcItem("exit"),
-)
+// var completer = readline.NewPrefixCompleter(
+//
+//	readline.PcItem("echo"),
+//	readline.PcItem("exit"),
+//
+// )
+var executablesMap = make(map[string]string)
 
 func filterInput(r rune) (rune, bool) {
 	switch r {
@@ -22,19 +27,64 @@ func filterInput(r rune) (rune, bool) {
 	return r, true
 }
 
+type RingingAutoCompleter struct {
+	handler readline.AutoCompleter
+}
+
+func (m *RingingAutoCompleter) Do(line []rune, pos int) ([][]rune, int) {
+	newLine, length := m.handler.Do(line, pos)
+
+	if length == 0 && len(line) > 0 {
+		fmt.Print("\a")
+	}
+
+	return newLine, length
+}
+
+func populateExecutables(completers []readline.PrefixCompleterInterface) []readline.PrefixCompleterInterface {
+	paths := strings.SplitSeq(os.Getenv("PATH"), string(os.PathListSeparator))
+	for path := range paths {
+		directory, err := os.OpenFile(path, os.O_RDONLY, fs.ModeDir)
+		if err != nil {
+			if os.IsNotExist(err) {
+				continue
+			}
+			panic(err)
+		}
+		defer directory.Close()
+		files, _ := directory.Readdir(-1)
+		for _, file := range files {
+			if !file.IsDir() && file.Mode()&0100 != 0 {
+				completers = append(completers, readline.PcItem(file.Name()))
+				// fmt.Printf("Adding %s in directory: %s", file.Name(), directory.Name())
+				executablesMap[file.Name()] = directory.Name()
+			}
+		}
+	}
+	return completers
+}
+
 func main() {
 	loop := true
 	builtinCommands := []string{"exit", "echo", "type", "pwd", "cd"}
+	var completers []readline.PrefixCompleterInterface
+	for _, builtin := range builtinCommands {
+		completers = append(completers, readline.PcItem(builtin))
+	}
+	completers = populateExecutables(completers)
+
 	reader := bufio.NewReader(os.Stdin)
 	rl, err := readline.NewEx(&readline.Config{
 		// Prompt:              "\033[31m$ \033[0m ",
 		Prompt:              "$ ",
 		HistoryFile:         "/tmp/gowshella.tmp",
-		AutoComplete:        completer,
 		InterruptPrompt:     "^C",
 		EOFPrompt:           "exit",
 		FuncFilterInputRune: filterInput,
 		Stdout:              os.Stdout,
+		AutoComplete: &RingingAutoCompleter{
+			handler: readline.NewPrefixCompleter(completers...),
+		},
 	})
 	if err != nil {
 		handleExit(os.Stderr, "Could not create readline instance")

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"os/exec"
 	"slices"
@@ -16,9 +15,9 @@ func handleType(builtinCommands []string, argumentSlice []string, outputWriter i
 			fmt.Fprintf(outputWriter, "%s is a shell builtin\n", argument)
 			continue
 		}
-		fileinfo, directory := isExecutable(argument)
-		if fileinfo != nil {
-			fmt.Fprintf(outputWriter, "%s is %s/%s\n", argument, directory, fileinfo.Name())
+		fileName, directory := isExecutable(argument)
+		if fileName != "" {
+			fmt.Fprintf(outputWriter, "%s is %s/%s\n", argument, directory, fileName)
 			continue
 		}
 		fmt.Fprintf(outputWriter, "%s: not found\n", argument)
@@ -145,7 +144,7 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 		return
 	}
 	fileinfo, _ := isExecutable(command)
-	if fileinfo == nil {
+	if fileinfo == "" {
 		fmt.Fprintf(os.Stderr, "%s: command not found\n", command)
 		return
 	}
@@ -199,25 +198,29 @@ func tokenize(argument string) []string {
 	return tokens
 }
 
-func isExecutable(command string) (fs.FileInfo, string) {
-	paths := strings.SplitSeq(os.Getenv("PATH"), string(os.PathListSeparator))
+func isExecutable(command string) (string, string) {
+	// paths := strings.SplitSeq(os.Getenv("PATH"), string(os.PathListSeparator))
 	// paths := strings.Split(os.Getenv("PATH"), string(os.PathListSeparator)) LESS EFFICIENT, as it populates a whole slice, whereas the above
 	// function returns an iter.Seq[string] iterator
-	for path := range paths {
-		directory, err := os.OpenFile(path, os.O_RDONLY, fs.ModeDir)
-		if err != nil {
-			if os.IsNotExist(err) {
-				continue
-			}
-			panic(err)
-		}
-		defer directory.Close()
-		files, _ := directory.Readdir(-1)
-		for _, file := range files {
-			if file.Name() == command && file.Mode()&0100 != 0 {
-				return file, directory.Name()
-			}
-		}
+	// for path := range paths {
+	// 	directory, err := os.OpenFile(path, os.O_RDONLY, fs.ModeDir)
+	// 	if err != nil {
+	// 		if os.IsNotExist(err) {
+	// 			continue
+	// 		}
+	// 		panic(err)
+	// 	}
+	// 	defer directory.Close()
+	// 	files, _ := directory.Readdir(-1)
+	// 	for _, file := range files {
+	// 		if file.Name() == command && file.Mode()&0100 != 0 {
+	// 			return file, directory.Name()
+	// 		}
+	// 	}
+	// }
+	dir, ok := executablesMap[command]
+	if !ok {
+		return "", ""
 	}
-	return nil, ""
+	return command, dir
 }
