@@ -27,7 +27,8 @@ func main() {
 	builtinCommands := []string{"exit", "echo", "type", "pwd", "cd"}
 	reader := bufio.NewReader(os.Stdin)
 	rl, err := readline.NewEx(&readline.Config{
-		Prompt:              "\033[31m$ \033[0m ",
+		// Prompt:              "\033[31m$ \033[0m ",
+		Prompt:              "$ ",
 		HistoryFile:         "/tmp/gowshella.tmp",
 		AutoComplete:        completer,
 		InterruptPrompt:     "^C",
