@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/chzyer/readline"
@@ -33,7 +34,11 @@ type RingingAutoCompleter struct {
 
 func (m *RingingAutoCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	newLine, length := m.handler.Do(line, pos)
-
+	slices.SortFunc(newLine, func(a, b []rune) int {
+		return strings.Compare(
+			string(a), string(b),
+		)
+	})
 	if length == 0 && len(line) > 0 {
 		fmt.Print("\a")
 	}
