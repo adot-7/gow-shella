@@ -63,6 +63,16 @@ func populateExecutables(completers []readline.PrefixCompleterInterface) []readl
 	}
 	return completers
 }
+func listdirectories(path string) func(string) []string {
+	return func(s string) []string {
+		names := make([]string, 0)
+		files, _ := os.ReadDir(path)
+		for _, f := range files {
+			names = append(names, f.Name())
+		}
+		return names
+	}
+}
 
 func main() {
 	loop := true
@@ -72,7 +82,7 @@ func main() {
 		completers = append(completers, readline.PcItem(builtin))
 	}
 	completers = populateExecutables(completers)
-
+	completers = append(completers, readline.PcItemDynamic(listdirectories("./")))
 	reader := bufio.NewReader(os.Stdin)
 	rl, err := readline.NewEx(&readline.Config{
 		// Prompt:              "\033[31m$ \033[0m ",
