@@ -3,7 +3,6 @@ package readline
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"io"
 )
 
@@ -242,15 +241,15 @@ func (o *opCompleter) CompleteRefresh() {
 	// move back
 	// fmt.Fprintf(buf, "\033[%dA\r", lineCnt-1+lines)
 	// fmt.Fprintf(buf, "\033[%dC", o.op.buf.idx+o.op.buf.PromptLen()) //moves cursor to right
-	// buf.WriteString("\n")             //pushes new line to buffer ig? or does it directly flush to writer? not sure
+	buf.WriteString("\n") //pushes new line to buffer ig? or does it directly flush to writer? not sure
 	// fmt.Fprintf(buf, "\033[%dB\r", 1) // moves cursor one row below and places it at start(col 0 or something)
-	// buf.Write([]byte(o.op.cfg.Prompt))
-	// buf.WriteString(string(same))
+	buf.Write([]byte(o.op.cfg.Prompt))
+	buf.WriteString(string(same))
 	buf.Flush() //flushes everything to the o.w which is the writer
 	// buf.WriteString("test log")
-	o.op.buf.w.Write([]byte("\n"))
-	fmt.Fprintf(o.op.buf.w, "\033[%dB\r", 1)
-	o.op.buf.print() //codecrafters submit is reading this statement response as another output. so have to push the new line prompt before flush
+	// o.op.buf.w.Write([]byte("\n"))
+	// fmt.Fprintf(o.op.buf.w, "\033[%dB\r", 1)
+	// o.op.buf.print() //codecrafters submit is reading this statement response as another output. so have to push the new line prompt before flush
 }
 
 func (o *opCompleter) aggCandidate(candidate [][]rune) int {
