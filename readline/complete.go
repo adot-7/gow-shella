@@ -246,10 +246,9 @@ func (o *opCompleter) CompleteRefresh() {
 	fmt.Fprintf(buf, "\033[%dB\r", 1) // moves cursor one row below and places it at start(col 0 or something)
 	buf.Write([]byte(o.op.cfg.Prompt))
 	buf.WriteString(string(same))
-
 	buf.Flush() //flushes everything to the o.w which is the writer
 	buf.WriteString("test log")
-	// o.op.buf.print() //codecrafters submit is reading this statement response as another output. so have to push the new line prompt before flush
+	o.op.buf.print() //codecrafters submit is reading this statement response as another output. so have to push the new line prompt before flush
 }
 
 func (o *opCompleter) aggCandidate(candidate [][]rune) int {
