@@ -248,7 +248,8 @@ func (o *opCompleter) CompleteRefresh() {
 	buf.WriteString(string(same))
 
 	buf.Flush() //flushes everything to the o.w which is the writer
-	// o.op.buf.print()
+	buf.WriteString("test log")
+	// o.op.buf.print() //codecrafters submit is reading this statement response as another output. so have to push the new line prompt before flush
 }
 
 func (o *opCompleter) aggCandidate(candidate [][]rune) int {
