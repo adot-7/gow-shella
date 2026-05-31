@@ -243,7 +243,7 @@ func (o *opCompleter) CompleteRefresh() {
 	// fmt.Fprintf(buf, "\033[%dA\r", lineCnt-1+lines)
 	// fmt.Fprintf(buf, "\033[%dC", o.op.buf.idx+o.op.buf.PromptLen()) //moves cursor to right
 	// buf.WriteString("\n")             //pushes new line to buffer ig? or does it directly flush to writer? not sure
-	fmt.Fprintf(buf, "\033[%dB\r", 1) // moves cursor one row below and places it at start(col 0 or something)
+	// fmt.Fprintf(buf, "\033[%dB\r", 1) // moves cursor one row below and places it at start(col 0 or something)
 	// buf.Write([]byte(o.op.cfg.Prompt))
 	// buf.WriteString(string(same))
 	buf.Flush() //flushes everything to the o.w which is the writer
