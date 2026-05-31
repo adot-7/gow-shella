@@ -191,6 +191,7 @@ func (o *opCompleter) CompleteRefresh() {
 	if !o.inCompleteMode {
 		return
 	}
+	o.op.inCompleteMode = false
 
 	lineCnt := o.op.buf.CursorLineCount()
 	colWidth := 0
@@ -243,9 +244,11 @@ func (o *opCompleter) CompleteRefresh() {
 	// fmt.Fprintf(buf, "\033[%dC", o.op.buf.idx+o.op.buf.PromptLen()) //moves cursor to right
 	buf.WriteString("\n")             //pushes new line to buffer ig? or does it directly flush to writer? not sure
 	fmt.Fprintf(buf, "\033[%dB\r", 1) // moves cursor one row below and places it at start(col 0 or something)
-	buf.Flush()                       //flushes everything to the o.w which is the writer
-	o.op.inCompleteMode = false
-	o.op.buf.print()
+	buf.Write([]byte(o.op.cfg.Prompt))
+	buf.WriteString(string(same))
+
+	buf.Flush() //flushes everything to the o.w which is the writer
+	// o.op.buf.print()
 }
 
 func (o *opCompleter) aggCandidate(candidate [][]rune) int {
