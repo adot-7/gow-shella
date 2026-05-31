@@ -108,7 +108,7 @@ func (o *opCompleter) OnComplete() bool {
 
 	o.EnterCompleteMode(offset, newLines)
 	o.ExitCompleteMode(false) //EXITED COMPLETE MODE TO NOT ENTER SELECT MODE AND INSTEAD MOVE TO NEXT LINE ACCORDING TO CONDITIONS OF BYOX CHALLENGE
-	o.op.buf.print()          // prints the buffer from stdin ig, before the writes of completemode, the actual prompt along with '$ '
+	// o.op.buf.print()          // prints the buffer from stdin ig, before the writes of completemode, the actual prompt along with '$ '
 	return false
 }
 
@@ -244,6 +244,8 @@ func (o *opCompleter) CompleteRefresh() {
 	buf.WriteString("\n")             //pushes new line to buffer ig? or does it directly flush to writer? not sure
 	fmt.Fprintf(buf, "\033[%dB\r", 1) // moves cursor one row below and places it at start(col 0 or something)
 	buf.Flush()                       //flushes everything to the o.w which is the writer
+	o.op.inCompleteMode = false
+	o.op.buf.print()
 }
 
 func (o *opCompleter) aggCandidate(candidate [][]rune) int {
