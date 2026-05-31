@@ -8,7 +8,7 @@ import (
 
 var (
 	ErrInterrupt = errors.New("Interrupt")
-	tabState     = true
+	showResults  = false
 )
 
 type InterruptError struct {
@@ -174,21 +174,19 @@ func (o *Operation) ioloop() {
 				o.buf.Refresh(nil)
 			}
 		case CharTab:
-			if tabState {
+			if o.GetConfig().AutoComplete == nil {
 				o.t.Bell()
-				tabState = !tabState
-
+				break
+			}
+			if !showResults {
+				showResults = !showResults
+				o.t.Bell()
+				break
+			}
+			if o.OnComplete() {
+				keepInCompleteMode = false
 			} else {
-				if o.GetConfig().AutoComplete == nil {
-					o.t.Bell()
-					break
-				}
-				if o.OnComplete() {
-					keepInCompleteMode = true
-				} else {
-					o.t.Bell()
-					break
-				}
+				o.t.Bell()
 			}
 
 		case CharBckSearch:

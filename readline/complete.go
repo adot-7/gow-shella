@@ -107,7 +107,9 @@ func (o *opCompleter) OnComplete() bool {
 	}
 
 	o.EnterCompleteMode(offset, newLines)
-	return true
+	o.ExitCompleteMode(false) //EXITED COMPLETE MODE TO NOT ENTER SELECT MODE AND INSTEAD MOVE TO NEXT LINE ACCORDING TO CONDITIONS OF BYOX CHALLENGE
+	o.op.buf.print()          // prints the buffer from stdin ig, before the writes of completemode, the actual prompt along with '$ '
+	return false
 }
 
 func (o *opCompleter) IsInCompleteSelectMode() bool {
@@ -189,6 +191,7 @@ func (o *opCompleter) CompleteRefresh() {
 	if !o.inCompleteMode {
 		return
 	}
+
 	lineCnt := o.op.buf.CursorLineCount()
 	colWidth := 0
 	for _, c := range o.candidate {
@@ -236,9 +239,11 @@ func (o *opCompleter) CompleteRefresh() {
 	}
 
 	// move back
-	fmt.Fprintf(buf, "\033[%dA\r", lineCnt-1+lines)
-	fmt.Fprintf(buf, "\033[%dC", o.op.buf.idx+o.op.buf.PromptLen())
-	buf.Flush()
+	// fmt.Fprintf(buf, "\033[%dA\r", lineCnt-1+lines)
+	// fmt.Fprintf(buf, "\033[%dC", o.op.buf.idx+o.op.buf.PromptLen()) //moves cursor to right
+	buf.WriteString("\n")             //pushes new line to buffer ig? or does it directly flush to writer? not sure
+	fmt.Fprintf(buf, "\033[%dB\r", 1) // moves cursor one row below and places it at start(col 0 or something)
+	buf.Flush()                       //flushes everything to the o.w which is the writer
 }
 
 func (o *opCompleter) aggCandidate(candidate [][]rune) int {
