@@ -8,7 +8,6 @@ import (
 
 var (
 	ErrInterrupt = errors.New("Interrupt")
-	showResults  = false
 )
 
 type InterruptError struct {
@@ -178,15 +177,11 @@ func (o *Operation) ioloop() {
 				o.t.Bell()
 				break
 			}
-			if !showResults {
-				showResults = !showResults
-				o.t.Bell()
-				break
-			}
 			if o.OnComplete() {
 				keepInCompleteMode = false
 			} else {
 				o.t.Bell()
+				break
 			}
 
 		case CharBckSearch:
