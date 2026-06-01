@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/chzyer/readline"
@@ -25,23 +27,23 @@ func filterInput(r rune) (rune, bool) {
 	return r, true
 }
 
-// type RingingAutoCompleter struct {
-// 	handler readline.AutoCompleter
-// }
+type RingingAutoCompleter struct {
+	handler readline.AutoCompleter
+}
 
-// func (m *RingingAutoCompleter) Do(line []rune, pos int) ([][]rune, int) {
-// 	newLine, length := m.handler.Do(line, pos)
-// 	slices.SortFunc(newLine, func(a, b []rune) int {
-// 		return strings.Compare(
-// 			string(a), string(b),
-// 		)
-// 	})
-// 	if length == 0 && len(line) > 0 {
-// 		fmt.Print("\a")
-// 	}
+func (m *RingingAutoCompleter) Do(line []rune, pos int) ([][]rune, int) {
+	newLine, length := m.handler.Do(line, pos)
+	slices.SortFunc(newLine, func(a, b []rune) int {
+		return strings.Compare(
+			string(a), string(b),
+		)
+	})
+	if length == 0 && len(line) > 0 {
+		fmt.Print("\a")
+	}
 
-// 	return newLine, length
-// }
+	return newLine, length
+}
 
 func populateExecutables(completers []readline.PrefixCompleterInterface) []readline.PrefixCompleterInterface {
 	paths := strings.SplitSeq(os.Getenv("PATH"), string(os.PathListSeparator))
@@ -107,7 +109,9 @@ func main() {
 		FuncFilterInputRune: filterInput,
 		Stdout:              os.Stdout,
 		HistorySearchFold:   true,
-		AutoComplete:        completer,
+		AutoComplete: &RingingAutoCompleter{
+			handler: completer,
+		},
 	})
 	if err != nil {
 		handleExit(os.Stderr, "Could not create readline instance")
