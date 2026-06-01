@@ -83,6 +83,14 @@ func NewPrefixCompleter(pc ...PrefixCompleterInterface) *PrefixCompleter {
 	return PcItem("", pc...)
 }
 
+// func NewDynamicCompleter(pc ...DynamicPrefixCompleterInterface) *PrefixCompleter {
+// 	name := " "
+// 	return &PrefixCompleter{
+// 		Name:    []rune(name),
+// 		Dynamic: true,
+// 	}
+// }
+
 func PcItem(name string, pc ...PrefixCompleterInterface) *PrefixCompleter {
 	name += " "
 	return &PrefixCompleter{

@@ -1,11 +1,8 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
 	"io/fs"
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/chzyer/readline"
@@ -28,23 +25,23 @@ func filterInput(r rune) (rune, bool) {
 	return r, true
 }
 
-type RingingAutoCompleter struct {
-	handler readline.AutoCompleter
-}
+// type RingingAutoCompleter struct {
+// 	handler readline.AutoCompleter
+// }
 
-func (m *RingingAutoCompleter) Do(line []rune, pos int) ([][]rune, int) {
-	newLine, length := m.handler.Do(line, pos)
-	slices.SortFunc(newLine, func(a, b []rune) int {
-		return strings.Compare(
-			string(a), string(b),
-		)
-	})
-	if length == 0 && len(line) > 0 {
-		fmt.Print("\a")
-	}
+// func (m *RingingAutoCompleter) Do(line []rune, pos int) ([][]rune, int) {
+// 	newLine, length := m.handler.Do(line, pos)
+// 	slices.SortFunc(newLine, func(a, b []rune) int {
+// 		return strings.Compare(
+// 			string(a), string(b),
+// 		)
+// 	})
+// 	if length == 0 && len(line) > 0 {
+// 		fmt.Print("\a")
+// 	}
 
-	return newLine, length
-}
+// 	return newLine, length
+// }
 
 func populateExecutables(completers []readline.PrefixCompleterInterface) []readline.PrefixCompleterInterface {
 	paths := strings.SplitSeq(os.Getenv("PATH"), string(os.PathListSeparator))
@@ -60,7 +57,8 @@ func populateExecutables(completers []readline.PrefixCompleterInterface) []readl
 		files, _ := directory.Readdir(-1)
 		for _, file := range files {
 			if !file.IsDir() && file.Mode()&0100 != 0 {
-				completers = append(completers, readline.PcItem(file.Name()))
+				completers = append(completers, readline.PcItem(file.Name(),
+					readline.PcItemDynamic(listdirectories("./"))))
 				// fmt.Printf("Adding %s in directory: %s", file.Name(), directory.Name())
 				executablesMap[file.Name()] = directory.Name()
 			}
@@ -80,15 +78,26 @@ func listdirectories(path string) func(string) []string {
 }
 
 func main() {
+	// test()
 	loop := true
 	builtinCommands := []string{"exit", "echo", "type", "pwd", "cd"}
 	var completers []readline.PrefixCompleterInterface
 	for _, builtin := range builtinCommands {
-		completers = append(completers, readline.PcItem(builtin))
+		completers = append(completers,
+			readline.PcItem(builtin,
+				readline.PcItemDynamic(listdirectories("./"))),
+		)
+		// print(string(&completers[0].Tree()))
+		// time.Sleep(500000000)
 	}
 	completers = populateExecutables(completers)
-	completers = append(completers, readline.PcItemDynamic(listdirectories("./")))
-	reader := bufio.NewReader(os.Stdin)
+	// completers = append(completers, readline.PcItemDynamic(listdirectories("./")))
+	completer := readline.NewPrefixCompleter(completers...)
+
+	// print(completer.Tree("    "))
+	// time.Sleep(500000000)
+
+	// reader := bufio.NewReader(os.Stdin)
 	rl, err := readline.NewEx(&readline.Config{
 		// Prompt:              "\033[31m$ \033[0m ",
 		Prompt:              "$ ",
@@ -97,9 +106,8 @@ func main() {
 		EOFPrompt:           "exit",
 		FuncFilterInputRune: filterInput,
 		Stdout:              os.Stdout,
-		AutoComplete: &RingingAutoCompleter{
-			handler: readline.NewPrefixCompleter(completers...),
-		},
+		HistorySearchFold:   true,
+		AutoComplete:        completer,
 	})
 	if err != nil {
 		handleExit(os.Stderr, "Could not create readline instance")
@@ -115,7 +123,8 @@ func main() {
 		// input, err := reader.ReadString('\n')
 		input, err := rl.Readline()
 		if err != nil {
-			input, err = reader.ReadString('\n')
+			// input, err = reader.ReadString('\n')
+			break
 		}
 		if len(input) == 0 {
 			input = ""

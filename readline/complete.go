@@ -106,7 +106,7 @@ func (o *opCompleter) OnComplete() bool {
 	}
 
 	o.EnterCompleteMode(offset, newLines)
-	o.ExitCompleteMode(false) //EXITED COMPLETE MODE TO NOT ENTER SELECT MODE AND INSTEAD MOVE TO NEXT LINE ACCORDING TO CONDITIONS OF BYOX CHALLENGE
+	// o.ExitCompleteMode(false) //EXITED COMPLETE MODE TO NOT ENTER SELECT MODE AND INSTEAD MOVE TO NEXT LINE ACCORDING TO CONDITIONS OF BYOX CHALLENGE
 	// o.op.buf.print()          // prints the buffer from stdin ig, before the writes of completemode, the actual prompt along with '$ '
 	return false
 }
@@ -190,7 +190,7 @@ func (o *opCompleter) CompleteRefresh() {
 	if !o.inCompleteMode {
 		return
 	}
-	o.op.inCompleteMode = false
+	// o.op.inCompleteMode = false
 
 	lineCnt := o.op.buf.CursorLineCount()
 	colWidth := 0
