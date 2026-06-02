@@ -17,6 +17,8 @@ type AutoCompleter interface {
 	Do(line []rune, pos int) (newLine [][]rune, length int)
 }
 
+var tabState = false
+
 type TabCompleter struct{}
 
 func (t *TabCompleter) Do([]rune, int) ([][]rune, int) {
@@ -64,7 +66,8 @@ func (o *opCompleter) nextCandidate(i int) {
 }
 
 func (o *opCompleter) OnComplete() bool {
-	if o.width == 0 {
+	if o.width == 0 || !tabState {
+		tabState = !tabState
 		return false
 	}
 	if o.IsInCompleteSelectMode() {
