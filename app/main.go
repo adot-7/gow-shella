@@ -59,7 +59,8 @@ func populateExecutables(completers []readline.PrefixCompleterInterface) []readl
 		files, _ := directory.Readdir(-1)
 		for _, file := range files {
 			if !file.IsDir() && file.Mode()&0100 != 0 {
-				completers = append(completers, readline.PcItem(file.Name()))
+				completers = append(completers, readline.PcItem(file.Name(),
+					readline.PcItemDynamic(listdirectories("./"))))
 				// fmt.Printf("Adding %s in directory: %s", file.Name(), directory.Name())
 				executablesMap[file.Name()] = directory.Name()
 			}
@@ -118,13 +119,14 @@ func main() {
 	var completers []readline.PrefixCompleterInterface
 	for _, builtin := range builtinCommands {
 		completers = append(completers,
-			readline.PcItem(builtin),
+			readline.PcItem(builtin,
+				readline.PcItemDynamic(listdirectories("./"))),
 		)
 		// print(string(&completers[0].Tree()))
 		// time.Sleep(500000000)
 	}
 	completers = populateExecutables(completers)
-	completers = append(completers, readline.PcItemDynamic(listdirectories("./")))
+	// completers = append(completers, readline.PcItemDynamic(listdirectories("./")))
 	completer := readline.NewPrefixCompleter(completers...)
 
 	// print(completer.Tree("    "))

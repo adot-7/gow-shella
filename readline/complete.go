@@ -76,9 +76,9 @@ func (o *opCompleter) OnComplete() bool {
 
 	buf := o.op.buf
 	rs := buf.Runes()
-	rsString := string(rs)
-	rsString = rsString[bytes.LastIndex([]byte(rsString), []byte(" "))+1:]
-	rs = []rune(rsString)
+	// rsString := string(rs)
+	// rsString = rsString[bytes.LastIndex([]byte(rsString), []byte(" "))+1:]
+	// rs = []rune(rsString)
 
 	if o.IsInCompleteMode() && o.candidateSource != nil && runes.Equal(rs, o.candidateSource) {
 		o.EnterCompleteSelectMode()

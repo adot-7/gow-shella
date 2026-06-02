@@ -124,7 +124,7 @@ func printRuneSlice(r [][]rune) {
 	fmt.Println(lines)
 }
 func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []rune) (newLine [][]rune, offset int) {
-	line = runes.TrimSpaceLeft(line)
+	line = runes.TrimSpaceLeft(line[:pos])
 	goNext := false
 	var lineCompleter PrefixCompleterInterface
 	for _, child := range p.GetChildren() {
