@@ -123,8 +123,19 @@ func printRuneSlice(r [][]rune) {
 	}
 	fmt.Println(lines)
 }
+
+func splitLastArg(runeSlice []rune) []rune {
+	for i := len(runeSlice) - 1; i >= 0; i-- {
+		if runeSlice[i] == ' ' {
+			return runeSlice[i+1:]
+		}
+	}
+	return runeSlice
+}
 func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []rune) (newLine [][]rune, offset int) {
+	// fmt.Printf("\n'%s'\n", string(line))
 	line = runes.TrimSpaceLeft(line[:pos])
+	// fmt.Printf("\n'%s'\n", string(line))
 	goNext := false
 	var lineCompleter PrefixCompleterInterface
 	for _, child := range p.GetChildren() {
@@ -134,6 +145,9 @@ func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []run
 		if ok && childDynamic.IsDynamic() {
 			// fmt.Println("child dynamic")
 			childNames = childDynamic.GetDynamicNames(origLine)
+			line = splitLastArg(line) // "readline/ r" -> "r"
+			pos = len(line)
+			// fmt.Printf("\n'%s'\n", string(origLine))
 			// printRuneSlice(childNames)
 		} else {
 
@@ -172,6 +186,7 @@ func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []run
 
 					offset = len(line)
 					lineCompleter = child
+					// goNext = true
 				} else {
 					// fmt.Printf("NONE i/p:'%s' and childname:%s", string(line), string(childName))
 
@@ -183,6 +198,12 @@ func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []run
 			// }
 		}
 	}
+	// if len(p.GetChildren()) == 1 {
+	// 	pDynamic, ok := p.GetChildren()[0].(DynamicPrefixCompleterInterface)
+	// 	if ok && pDynamic.IsDynamic() {
+
+	// 	}
+	// }
 
 	if len(newLine) != 1 {
 		return

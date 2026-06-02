@@ -76,9 +76,10 @@ func (o *opCompleter) OnComplete() bool {
 
 	buf := o.op.buf
 	rs := buf.Runes()
-	// rsString := string(rs)
-	// rsString = rsString[bytes.LastIndex([]byte(rsString), []byte(" "))+1:]
+	lastString := string(rs)
+	lastString = lastString[bytes.LastIndex([]byte(lastString), []byte(" "))+1:]
 	// rs = []rune(rsString)
+	// fmt.Printf("\n%s\n", lastString)
 
 	if o.IsInCompleteMode() && o.candidateSource != nil && runes.Equal(rs, o.candidateSource) {
 		o.EnterCompleteSelectMode()
@@ -93,6 +94,7 @@ func (o *opCompleter) OnComplete() bool {
 		o.ExitCompleteMode(false)
 		return true
 	}
+	// printRuneSlice(newLines)
 
 	// only Aggregate candidates in non-complete mode
 	if !o.IsInCompleteMode() {

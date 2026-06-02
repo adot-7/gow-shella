@@ -75,7 +75,7 @@ func listdirectories(path string) func(string) []string {
 		input := ""
 		tokenizedInput := tokenize(s)
 		if len(tokenizedInput) > 1 {
-			input = tokenizedInput[1] //should give the first arg after space
+			input = tokenizedInput[len(tokenizedInput)-1] //should give the first arg after space
 
 		}
 		lastSlash := strings.LastIndex(input, "/") + 1
