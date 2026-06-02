@@ -79,7 +79,13 @@ func listdirectories(path string) func(string) []string {
 
 		}
 		lastSlash := strings.LastIndex(input, "/") + 1
-		inputPath := path + input
+		var inputPath string
+		//TODO: Fix for traversing back in the directories.
+		if !strings.HasPrefix(input, "../") {
+			inputPath = path + input
+		} else {
+			inputPath = input
+		}
 
 		indexToCut := strings.LastIndex(inputPath, "/") + 1
 		relativePath := inputPath[:indexToCut]
@@ -90,7 +96,11 @@ func listdirectories(path string) func(string) []string {
 			// if strings.HasPrefix(f.Name(), partial) {
 
 			// }
-			nameToAppend := input[:lastSlash] + f.Name()
+			name := f.Name()
+			if f.IsDir() {
+				name = name + "/"
+			}
+			nameToAppend := input[:lastSlash] + name
 
 			// println(nameToAppend)
 			names = append(names, nameToAppend)

@@ -144,10 +144,17 @@ func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []run
 			if len(line) >= len(childName) {
 				if runes.HasPrefix(line, childName) {
 					if len(line) == len(childName) {
-						newLine = append(newLine, []rune{' '})
-
+						if !(childName[len(childName)-2] == '/') {
+							newLine = append(newLine, []rune{' '})
+						}
+						// newLine = append(newLine, []rune{' '})
 					} else {
-						newLine = append(newLine, childName)
+						if childName[len(childName)-2] == '/' {
+							newLine = append(newLine, childName[:len(childName)-1])
+						} else {
+							newLine = append(newLine, childName)
+						}
+
 						// fmt.Printf("(ip>childname)i/p:'%s' and childname:%s", string(line), string(childName))
 					}
 					offset = len(childName)
@@ -157,7 +164,12 @@ func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []run
 			} else {
 				if runes.HasPrefix(childName, line) {
 					// fmt.Printf("i/p:'%s' and childname:%s", string(line), string(childName))
-					newLine = append(newLine, childName[len(line):])
+					if childName[len(childName)-2] == '/' {
+						newLine = append(newLine, childName[len(line):len(childName)-1])
+					} else {
+						newLine = append(newLine, childName[len(line):])
+					}
+
 					offset = len(line)
 					lineCompleter = child
 				} else {
@@ -165,7 +177,10 @@ func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []run
 
 				}
 			}
-
+			// if childName[len(childName)-2] == '/' {
+			// 	// fmt.Printf("dir childname:'%s'", string(childName))
+			// 	offset = offset - 1 //Basically its a dir, so we dont want the space.
+			// }
 		}
 	}
 
