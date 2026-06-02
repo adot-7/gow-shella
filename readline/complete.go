@@ -66,8 +66,7 @@ func (o *opCompleter) nextCandidate(i int) {
 }
 
 func (o *opCompleter) OnComplete() bool {
-	if o.width == 0 || !tabState {
-		tabState = !tabState
+	if o.width == 0 {
 		return false
 	}
 	if o.IsInCompleteSelectMode() {
@@ -107,7 +106,10 @@ func (o *opCompleter) OnComplete() bool {
 			return true
 		}
 	}
-
+	if !tabState {
+		tabState = !tabState
+		return false
+	}
 	o.EnterCompleteMode(offset, newLines)
 	// o.ExitCompleteMode(false) //EXITED COMPLETE MODE TO NOT ENTER SELECT MODE AND INSTEAD MOVE TO NEXT LINE ACCORDING TO CONDITIONS OF BYOX CHALLENGE
 	// o.op.buf.print()          // prints the buffer from stdin ig, before the writes of completemode, the actual prompt along with '$ '
