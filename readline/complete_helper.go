@@ -2,6 +2,7 @@ package readline
 
 import (
 	"bytes"
+	"fmt"
 	"strings"
 )
 
@@ -115,7 +116,13 @@ func (p *PrefixCompleter) Do(line []rune, pos int) (newLine [][]rune, offset int
 func Do(p PrefixCompleterInterface, line []rune, pos int) (newLine [][]rune, offset int) {
 	return doInternal(p, line, pos, line)
 }
-
+func printRuneSlice(r [][]rune) {
+	var lines []string
+	for _, ru := range r {
+		lines = append(lines, string(ru))
+	}
+	fmt.Println(lines)
+}
 func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []rune) (newLine [][]rune, offset int) {
 	line = runes.TrimSpaceLeft(line[:pos])
 	goNext := false
@@ -125,8 +132,11 @@ func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []run
 
 		childDynamic, ok := child.(DynamicPrefixCompleterInterface)
 		if ok && childDynamic.IsDynamic() {
+			// fmt.Println("child dynamic")
 			childNames = childDynamic.GetDynamicNames(origLine)
+			// printRuneSlice(childNames)
 		} else {
+
 			childNames[0] = child.GetName()
 		}
 
@@ -135,8 +145,10 @@ func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []run
 				if runes.HasPrefix(line, childName) {
 					if len(line) == len(childName) {
 						newLine = append(newLine, []rune{' '})
+
 					} else {
 						newLine = append(newLine, childName)
+						// fmt.Printf("(ip>childname)i/p:'%s' and childname:%s", string(line), string(childName))
 					}
 					offset = len(childName)
 					lineCompleter = child
@@ -144,11 +156,16 @@ func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []run
 				}
 			} else {
 				if runes.HasPrefix(childName, line) {
+					// fmt.Printf("i/p:'%s' and childname:%s", string(line), string(childName))
 					newLine = append(newLine, childName[len(line):])
 					offset = len(line)
 					lineCompleter = child
+				} else {
+					// fmt.Printf("NONE i/p:'%s' and childname:%s", string(line), string(childName))
+
 				}
 			}
+
 		}
 	}
 

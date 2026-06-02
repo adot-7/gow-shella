@@ -71,10 +71,33 @@ func populateExecutables(completers []readline.PrefixCompleterInterface) []readl
 func listdirectories(path string) func(string) []string {
 	return func(s string) []string {
 		names := make([]string, 0)
-		files, _ := os.ReadDir(path)
-		for _, f := range files {
-			names = append(names, f.Name())
+		// actualPath := path+s -> "./path/to/f" what we want to do is actualPath[:LastIndex(actualPath, "/")+1]
+		input := ""
+		tokenizedInput := tokenize(s)
+		if len(tokenizedInput) > 1 {
+			input = tokenizedInput[1] //should give the first arg after space
+
 		}
+		lastSlash := strings.LastIndex(input, "/") + 1
+		inputPath := path + input
+
+		indexToCut := strings.LastIndex(inputPath, "/") + 1
+		relativePath := inputPath[:indexToCut]
+		// partial := inputPath[indexToCut:]
+
+		files, _ := os.ReadDir(relativePath)
+		for _, f := range files {
+			// if strings.HasPrefix(f.Name(), partial) {
+
+			// }
+			nameToAppend := input[:lastSlash] + f.Name()
+
+			// println(nameToAppend)
+			names = append(names, nameToAppend)
+		}
+		// print("\n")
+		// fmt.Println(names)
+		// time.Sleep(99999999)
 		return names
 	}
 }
@@ -112,6 +135,7 @@ func main() {
 		AutoComplete: &RingingAutoCompleter{
 			handler: completer,
 		},
+		// AutoComplete: completer,
 	})
 	if err != nil {
 		handleExit(os.Stderr, "Could not create readline instance")

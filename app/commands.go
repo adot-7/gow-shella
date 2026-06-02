@@ -143,6 +143,11 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 	case "":
 		return
 	}
+	// dirSlice := listdirectories("./")("")
+	// dirArg := argumentSlice[1]
+	// for _, dir := range dirSlice {
+
+	// }
 	fileinfo, _ := isExecutable(command)
 	if fileinfo == "" {
 		fmt.Fprintf(os.Stderr, "%s: command not found\n", command)
