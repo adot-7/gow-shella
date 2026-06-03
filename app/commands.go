@@ -11,7 +11,7 @@ import (
 )
 
 // var completionsDirectory = filepath.Join(returnDir("~"), "/gow-shella-completions/completions")
-var completionsDirectory = ""
+var completionsDirectory, _ = os.Getwd() //TODO: CHANGE
 
 func handleType(builtinCommands []string, argumentSlice []string, outputWriter io.Writer) {
 	for _, argument := range argumentSlice {
@@ -111,7 +111,7 @@ func registerCompletion(arguments []string, outputWriter io.Writer, errorWriter 
 	if err != nil {
 		// fmt.Fprintf(errorWriter, "complete: file not accessible\n")
 		// return
-		f, _ = os.OpenFile(srcPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+		f, _ = os.OpenFile(srcPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644) //TODO: REMOVE
 	}
 	defer f.Close()
 	srcInfo, _ := f.Stat()
