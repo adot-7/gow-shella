@@ -10,7 +10,8 @@ import (
 	"strings"
 )
 
-var completionsDirectory = filepath.Join(returnDir("~"), "/gow-shella-completions/completions")
+// var completionsDirectory = filepath.Join(returnDir("~"), "/gow-shella-completions/completions")
+var completionsDirectory = ""
 
 func handleType(builtinCommands []string, argumentSlice []string, outputWriter io.Writer) {
 	for _, argument := range argumentSlice {
@@ -93,6 +94,7 @@ func checkCompletion(arguments []string, outputWriter io.Writer) {
 	// 	}
 	// }
 	dst := filepath.Join(completionsDirectory, arguments[1])
+
 	f, err := os.Open(dst)
 	if err != nil {
 		fmt.Fprintf(outputWriter, "complete: %s: no completion specification\n", arguments[1])
