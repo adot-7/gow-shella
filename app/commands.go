@@ -116,7 +116,7 @@ func registerCompletion(arguments []string, outputWriter io.Writer, errorWriter 
 	finalDestination := filepath.Join(completionsDirectory, arguments[2])
 	// fmt.Println(finalDestination)
 	dst, err := os.OpenFile(finalDestination, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode())
-	fmt.Println(srcInfo.Mode())
+	// fmt.Println(srcInfo.Mode())
 	if err != nil {
 		fmt.Fprintf(errorWriter, "complete: completions directory not accessible\n")
 		return
