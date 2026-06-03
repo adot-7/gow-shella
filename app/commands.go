@@ -54,7 +54,7 @@ func handleComplete(arguments []string, outputWriter io.Writer, errorWriter io.W
 	}
 	switch arguments[0] {
 	case "-p":
-		fmt.Fprintf(errorWriter, "complete: %s: no completion specifications\n", arguments[1])
+		fmt.Fprintf(errorWriter, "complete: %s: no completion specification\n", arguments[1])
 	}
 }
 func returnDir(argument string) string {
