@@ -47,7 +47,16 @@ func handleCd(argument string) {
 		fmt.Fprintf(os.Stderr, "cd: %s: No such file or directory\n", argument)
 	}
 }
-
+func handleComplete(arguments []string, outputWriter io.Writer, errorWriter io.Writer) {
+	if len(arguments) < 2 {
+		fmt.Fprintf(errorWriter, "complete: insufficient arguments\n")
+		return
+	}
+	switch arguments[0] {
+	case "-p":
+		fmt.Fprintf(errorWriter, "complete: %s: no completion specifications\n", arguments[1])
+	}
+}
 func returnDir(argument string) string {
 	dir := argument
 	if strings.HasPrefix(argument, "~") {
@@ -139,6 +148,9 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 			return
 		}
 		handleCd(argumentSlice[0])
+		return
+	case "complete":
+		handleComplete(argumentSlice, outputWriter, errorWriter)
 		return
 	case "":
 		return
