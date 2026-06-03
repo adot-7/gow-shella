@@ -5,9 +5,12 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"slices"
 	"strings"
 )
+
+var completionsDirectory = filepath.Join(returnDir("~"), "/gow-shella-completions/completions")
 
 func handleType(builtinCommands []string, argumentSlice []string, outputWriter io.Writer) {
 	for _, argument := range argumentSlice {
@@ -48,15 +51,82 @@ func handleCd(argument string) {
 	}
 }
 func handleComplete(arguments []string, outputWriter io.Writer, errorWriter io.Writer) {
-	if len(arguments) < 2 {
-		fmt.Fprintf(errorWriter, "complete: insufficient arguments\n")
+	// if len(arguments) < x {
+	// 	fmt.Fprintf(errorWriter, "complete: insufficient arguments\n")
+	// 	return
+	// }
+	// fmt.Println(completionsDirectory)
+	err := os.MkdirAll(completionsDirectory, 0755)
+	if err != nil {
+		fmt.Fprintf(errorWriter, "complete: completions directory cannot be accessed/created\n")
 		return
 	}
-	switch arguments[0] {
+	flag := arguments[0]
+	switch flag {
 	case "-p":
-		fmt.Fprintf(errorWriter, "complete: %s: no completion specification\n", arguments[1])
+		// fmt.Fprintf(errorWriter, "complete: %s: no completion specification\n", arguments[1])
+		if len(arguments) < 2 {
+			fmt.Fprintf(errorWriter, "complete: insufficient arguments\n")
+			return
+		}
+		checkCompletion(arguments, outputWriter)
+	case "-C":
+		if len(arguments) < 3 {
+			fmt.Fprintf(errorWriter, "complete: insufficient arguments\n")
+			return
+		}
+		registerCompletion(arguments, outputWriter, errorWriter)
 	}
 }
+
+func checkCompletion(arguments []string, outputWriter io.Writer) {
+	// fileName
+	// dst, err := os.OpenFile(completionsDirectory, os.O_RDWR|os.O_CREATE|os.O_TRUNC, fs.ModeDir)
+	// if err!=nil {
+	// 	fmt.Fprintf(errorWriter, "complete: completions directory not accessible\n")
+	// 	return
+	// }
+	// files, _ := dst.ReadDir(-1)
+	// for _, file := range files{
+	// 	if file.IsDir() || file.Name() != {
+	// 		continue
+	// 	}
+	// }
+	dst := filepath.Join(completionsDirectory, arguments[1])
+	f, err := os.Open(dst)
+	if err != nil {
+		fmt.Fprintf(outputWriter, "complete: %s: no completion specification\n", arguments[1])
+		return
+	}
+	defer f.Close()
+	fmt.Fprintf(outputWriter, "complete -C '%s' %s\n", dst, arguments[1])
+}
+
+func registerCompletion(arguments []string, outputWriter io.Writer, errorWriter io.Writer) {
+	srcPath := returnDir(arguments[1])
+	// fileContent, err := os.ReadFile(srcPath)
+	f, err := os.Open(srcPath)
+	if err != nil {
+		fmt.Fprintf(errorWriter, "complete: file not accessible\n")
+		return
+	}
+	defer f.Close()
+	srcInfo, _ := f.Stat()
+	finalDestination := filepath.Join(completionsDirectory, arguments[2])
+	// fmt.Println(finalDestination)
+	dst, err := os.OpenFile(finalDestination, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode())
+	if err != nil {
+		fmt.Fprintf(errorWriter, "complete: completions directory not accessible\n")
+		return
+	}
+	defer dst.Close()
+	_, err = io.Copy(dst, f)
+	if err != nil {
+		fmt.Fprintf(errorWriter, "complete: failed to write completion\n")
+		return
+	}
+}
+
 func returnDir(argument string) string {
 	dir := argument
 	if strings.HasPrefix(argument, "~") {
@@ -150,6 +220,10 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 		handleCd(argumentSlice[0])
 		return
 	case "complete":
+		if len(argumentSlice) == 0 {
+			fmt.Fprintln(os.Stderr, "complete: insufficient arguments")
+			return
+		}
 		handleComplete(argumentSlice, outputWriter, errorWriter)
 		return
 	case "":
