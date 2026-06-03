@@ -107,14 +107,16 @@ func registerCompletion(arguments []string, outputWriter io.Writer, errorWriter 
 	// fileContent, err := os.ReadFile(srcPath)
 	f, err := os.Open(srcPath)
 	if err != nil {
-		fmt.Fprintf(errorWriter, "complete: file not accessible\n")
-		return
+		// fmt.Fprintf(errorWriter, "complete: file not accessible\n")
+		// return
+		f, _ = os.OpenFile(srcPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	}
 	defer f.Close()
 	srcInfo, _ := f.Stat()
 	finalDestination := filepath.Join(completionsDirectory, arguments[2])
 	// fmt.Println(finalDestination)
 	dst, err := os.OpenFile(finalDestination, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode())
+	fmt.Println(srcInfo.Mode())
 	if err != nil {
 		fmt.Fprintf(errorWriter, "complete: completions directory not accessible\n")
 		return
