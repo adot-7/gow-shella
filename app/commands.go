@@ -8,6 +8,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+
+	"github.com/chzyer/readline"
 )
 
 // var completionsDirectory = filepath.Join(returnDir("~"), "/gow-shella/completions")
@@ -51,7 +53,7 @@ func handleCd(argument string) {
 		fmt.Fprintf(os.Stderr, "cd: %s: No such file or directory\n", argument)
 	}
 }
-func handleComplete(arguments []string, outputWriter io.Writer, errorWriter io.Writer) {
+func handleComplete(arguments []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
 	// if len(arguments) < x {
 	// 	fmt.Fprintf(errorWriter, "complete: insufficient arguments\n")
 	// 	return
@@ -71,7 +73,7 @@ func handleComplete(arguments []string, outputWriter io.Writer, errorWriter io.W
 			fmt.Fprintf(errorWriter, "complete: insufficient arguments\n")
 			return
 		}
-		registerCompletion(arguments, outputWriter, errorWriter)
+		registerCompletion(arguments, outputWriter, errorWriter, prefixCompleter)
 	}
 }
 
@@ -104,8 +106,19 @@ func checkCompletion(arguments []string, outputWriter io.Writer) {
 	fmt.Fprintf(outputWriter, "complete -C '%s' %s\n", scriptPath, arguments[1])
 	time.Sleep(99999999)
 }
+func fetchCompletions(executablePath string) func(string) []string {
+	return func(s string) []string {
+		cmd := exec.Command("bash", executablePath)
+		output, err := cmd.Output()
+		if err != nil {
+			return []string{""}
+		}
+		// fmt.Fprintf(os.Stdout, "the output: %s\n", string(output))
+		return strings.Fields(string(output))
+	}
+}
 
-func registerCompletion(arguments []string, outputWriter io.Writer, errorWriter io.Writer) {
+func registerCompletion(arguments []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
 	/*
 		my dumdum went the file way like a normal shell but its more headaceh for codecrafers test so doing in memory
 
@@ -131,6 +144,18 @@ func registerCompletion(arguments []string, outputWriter io.Writer, errorWriter 
 			}
 	*/
 	completionsMap[arguments[2]] = arguments[1]
+	// print(prefixCompleter.Tree("    "))
+	for _, pc := range prefixCompleter.GetChildren() {
+		if strings.TrimSpace(string(pc.GetName())) == arguments[2] {
+			// fmt.Fprintf(outputWriter, "%s=%s\n", string(pc.GetName()), arguments[2])
+			pc.SetChildren([]readline.PrefixCompleterInterface{
+				readline.PcItemDynamic(fetchCompletions(arguments[1]))},
+			)
+		}
+		// fmt.Fprintf(outputWriter, "%s!=%s\n", string(pc.GetName()), arguments[2])
+	}
+	// print(prefixCompleter.Tree("    "))
+
 }
 
 func returnDir(argument string) string {
@@ -142,7 +167,7 @@ func returnDir(argument string) string {
 	return dir
 }
 
-func parseTokens(inputs []string, builtinCommands []string) {
+func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
 	isRedirect := false
 	isAppend := false
 	isErrorWriter := false
@@ -184,7 +209,7 @@ func parseTokens(inputs []string, builtinCommands []string) {
 					return
 				}
 				defer errorWriter.Close()
-				executeCommand(command, arguments, builtinCommands, os.Stdout, errorWriter)
+				executeCommand(command, arguments, builtinCommands, os.Stdout, errorWriter, prefixCompleter)
 				return
 			}
 
@@ -195,16 +220,16 @@ func parseTokens(inputs []string, builtinCommands []string) {
 				return
 			}
 			defer outputWriter.Close()
-			executeCommand(command, arguments, builtinCommands, outputWriter, os.Stderr)
+			executeCommand(command, arguments, builtinCommands, outputWriter, os.Stderr, prefixCompleter)
 			return
 		}
 		arguments = append(arguments, token)
 	}
-	executeCommand(command, arguments, builtinCommands, os.Stdout, os.Stderr)
+	executeCommand(command, arguments, builtinCommands, os.Stdout, os.Stderr, prefixCompleter)
 
 }
 
-func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer) {
+func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
 	switch command {
 	case "exit":
 		handleExit(outputWriter, "")
@@ -230,7 +255,7 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 			fmt.Fprintln(os.Stderr, "complete: insufficient arguments")
 			return
 		}
-		handleComplete(argumentSlice, outputWriter, errorWriter)
+		handleComplete(argumentSlice, outputWriter, errorWriter, prefixCompleter)
 		return
 	case "":
 		return

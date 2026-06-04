@@ -45,7 +45,7 @@ func (m *RingingAutoCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	return newLine, length
 }
 
-func populateExecutables(completers []readline.PrefixCompleterInterface) []readline.PrefixCompleterInterface {
+func populateExecutables(completers []readline.PrefixCompleterInterface, builtinSlice []string) []readline.PrefixCompleterInterface {
 	paths := strings.SplitSeq(os.Getenv("PATH"), string(os.PathListSeparator))
 	for path := range paths {
 		directory, err := os.OpenFile(path, os.O_RDONLY, fs.ModeDir)
@@ -58,7 +58,8 @@ func populateExecutables(completers []readline.PrefixCompleterInterface) []readl
 		defer directory.Close()
 		files, _ := directory.Readdir(-1)
 		for _, file := range files {
-			if !file.IsDir() && file.Mode()&0100 != 0 {
+
+			if !file.IsDir() && file.Mode()&0100 != 0 && !slices.Contains(builtinSlice, file.Name()) {
 				completers = append(completers, readline.PcItem(file.Name(),
 					readline.PcItemDynamic(listdirectories("./"))))
 				// fmt.Printf("Adding %s in directory: %s", file.Name(), directory.Name())
@@ -125,10 +126,10 @@ func main() {
 		// print(string(&completers[0].Tree()))
 		// time.Sleep(500000000)
 	}
-	completers = populateExecutables(completers)
+	// completers = append(completers, readline.PcItem("pwd"))
+	completers = populateExecutables(completers, builtinCommands)
 	// completers = append(completers, readline.PcItemDynamic(listdirectories("./")))
 	completer := readline.NewPrefixCompleter(completers...)
-
 	// print(completer.Tree("    "))
 	// time.Sleep(500000000)
 
@@ -171,7 +172,7 @@ func main() {
 		input = strings.TrimSpace(input)
 		// inputs := strings.SplitN(input, " ", 2)
 		inputs := tokenize(input)
-		parseTokens(inputs, builtinCommands)
+		parseTokens(inputs, builtinCommands, completer)
 		// fmt.Println(inputs[0])
 		// command := inputs[0]
 		// command = strings.TrimSuffix(command, " ")
