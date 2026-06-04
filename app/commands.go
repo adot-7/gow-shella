@@ -150,6 +150,7 @@ func removeCompletion(arguments []string, prefixCompleter *readline.PrefixComple
 	if !ok {
 		return
 	}
+	delete(completionsMap, arguments[1])
 	for _, pc := range prefixCompleter.GetChildren() {
 		if strings.TrimSpace(string(pc.GetName())) == arguments[1] {
 			pc.SetChildren([]readline.PrefixCompleterInterface{
