@@ -242,11 +242,18 @@ func handleJobTermination(cmd *exec.Cmd, jobId int) {
 	jobs[jobId-1].trailing = 1
 }
 func startJob(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
-
 	if len(inputs) == 1 {
 		return
 	}
 	jobsCounter++
+	jobId := jobsCounter
+	for i := range jobs {
+		if jobs[i].trailing == 2 {
+			jobId = jobs[i].jobId
+			jobsCounter--
+		}
+	}
+
 	input := inputs[:len(inputs)-1]
 	// go parseTokens(input, builtinCommands, prefixCompleter)
 	// fmt.Fprintf(os.Stdout, "[%d] %d", jobs, os.Getpid()) //This could work ig. but not for now, it doesnt reprint
@@ -259,7 +266,7 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 		return
 	}
 	currJob := createJob()
-	currJob.jobId = jobsCounter
+	currJob.jobId = jobId
 	currJob.recent = "+"
 	currJob.processId = cmd.Process.Pid
 	currJob.command = strings.Join(inputs, " ")
