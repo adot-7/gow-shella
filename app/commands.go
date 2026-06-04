@@ -5,13 +5,13 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 )
 
-// var completionsDirectory = filepath.Join(returnDir("~"), "/gow-shella-completions/completions")
-var completionsDirectory, _ = os.Getwd() //TODO: CHANGE
+// var completionsDirectory = filepath.Join(returnDir("~"), "/gow-shella/completions")
+var completionsMap = make(map[string]string, 0)
 
 func handleType(builtinCommands []string, argumentSlice []string, outputWriter io.Writer) {
 	for _, argument := range argumentSlice {
@@ -57,11 +57,6 @@ func handleComplete(arguments []string, outputWriter io.Writer, errorWriter io.W
 	// 	return
 	// }
 	// fmt.Println(completionsDirectory)
-	err := os.MkdirAll(completionsDirectory, 0755)
-	if err != nil {
-		fmt.Fprintf(errorWriter, "complete: completions directory cannot be accessed/created\n")
-		return
-	}
 	flag := arguments[0]
 	switch flag {
 	case "-p":
@@ -93,42 +88,49 @@ func checkCompletion(arguments []string, outputWriter io.Writer) {
 	// 		continue
 	// 	}
 	// }
-	dst := filepath.Join(completionsDirectory, arguments[1])
-
-	f, err := os.Open(dst)
-	if err != nil {
+	// dst := filepath.Join(completionsDirectory, arguments[1])
+	// f, err := os.Open(dst)
+	// if err != nil {
+	// 	fmt.Fprintf(outputWriter, "complete: %s: no completion specification\n", arguments[1])
+	// 	return
+	// }
+	// defer f.Close()
+	// fmt.Fprintf(outputWriter, "complete -C '%s' %s", dst, arguments[1])
+	scriptPath, ok := completionsMap[arguments[1]]
+	if !ok {
 		fmt.Fprintf(outputWriter, "complete: %s: no completion specification\n", arguments[1])
 		return
 	}
-	defer f.Close()
-	fmt.Fprintf(outputWriter, "complete -C '%s' %s\n", dst, arguments[1])
+	fmt.Fprintf(outputWriter, "complete -C '%s' %s\n", scriptPath, arguments[1])
+	time.Sleep(99999999)
 }
 
 func registerCompletion(arguments []string, outputWriter io.Writer, errorWriter io.Writer) {
-	srcPath := returnDir(arguments[1])
-	// fileContent, err := os.ReadFile(srcPath)
-	f, err := os.Open(srcPath)
-	if err != nil {
-		// fmt.Fprintf(errorWriter, "complete: file not accessible\n")
-		// return
-		f, _ = os.OpenFile(srcPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644) //TODO: REMOVE
-	}
-	defer f.Close()
-	srcInfo, _ := f.Stat()
-	finalDestination := filepath.Join(completionsDirectory, arguments[2])
-	// fmt.Println(finalDestination)
-	dst, err := os.OpenFile(finalDestination, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode())
-	// fmt.Println(srcInfo.Mode())
-	if err != nil {
-		fmt.Fprintf(errorWriter, "complete: completions directory not accessible\n")
-		return
-	}
-	defer dst.Close()
-	_, err = io.Copy(dst, f)
-	if err != nil {
-		fmt.Fprintf(errorWriter, "complete: failed to write completion\n")
-		return
-	}
+	/*
+		my dumdum went the file way like a normal shell but its more headaceh for codecrafers test so doing in memory
+
+			srcPath := returnDir(arguments[1])
+			f, err := os.Open(srcPath)
+			if err != nil {
+				fmt.Fprintf(errorWriter, "complete: file not accessible\n")
+				return
+			}
+			defer f.Close()
+			srcInfo, _ := f.Stat()
+			finalDestination := filepath.Join(completionsDirectory, arguments[2])
+			dst, err := os.OpenFile(finalDestination, os.O_RDWR|os.O_CREATE|os.O_TRUNC, srcInfo.Mode())
+			if err != nil {
+				fmt.Fprintf(errorWriter, "complete: completions directory not accessible\n")
+				return
+			}
+			defer dst.Close()
+			_, err = io.Copy(dst, f)
+			if err != nil {
+				fmt.Fprintf(errorWriter, "complete: failed to write completion\n")
+				return
+			}
+	*/
+	completionsMap[arguments[2]] = arguments[1]
 }
 
 func returnDir(argument string) string {
