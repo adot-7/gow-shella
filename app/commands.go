@@ -254,6 +254,9 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 	jobs = append(jobs, currJob)
 	if currJob.jobId > 1 {
 		jobs[currJob.jobId-2].recent = "-"
+		for i, _ := range jobs[:currJob.jobId-2] {
+			jobs[i].recent = " "
+		}
 	}
 	fmt.Fprintf(os.Stdout, "[%d] %d\n", currJob.jobId, currJob.processId)
 	go cmd.Wait()
