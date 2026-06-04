@@ -176,6 +176,7 @@ func main() {
 			continue
 		}
 		parseTokens(inputs, builtinCommands, completer)
+		handleJobs(os.Stdout, false)
 		// fmt.Println(inputs[0])
 		// command := inputs[0]
 		// command = strings.TrimSuffix(command, " ")

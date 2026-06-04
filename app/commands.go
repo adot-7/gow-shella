@@ -379,7 +379,6 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 
 }
 func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
-	handleJobs(outputWriter, false)
 	switch command {
 	case "exit":
 		handleExit(outputWriter, "")
