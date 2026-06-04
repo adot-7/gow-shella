@@ -172,7 +172,7 @@ func main() {
 		// inputs := strings.SplitN(input, " ", 2)
 		inputs := tokenize(input)
 		if inputs[len(inputs)-1] == "&" {
-			createJob(inputs, builtinCommands, completer)
+			startJob(inputs, builtinCommands, completer)
 			continue
 		}
 		parseTokens(inputs, builtinCommands, completer)

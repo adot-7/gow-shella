@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"os"
@@ -15,7 +16,23 @@ import (
 
 // var completionsDirectory = filepath.Join(returnDir("~"), "/gow-shella/completions")
 var completionsMap = make(map[string]string, 0)
-var jobs = 0
+var jobsCounter = 0
+
+type job struct {
+	jobId     int
+	recent    bool
+	processId int
+	status    []byte
+	command   string
+}
+
+func createJob() job {
+	return job{
+		status: bytes.Repeat([]byte(" "), 24),
+	}
+}
+
+var jobs = make([]job, 0)
 
 func handleType(builtinCommands []string, argumentSlice []string, outputWriter io.Writer) {
 	for _, argument := range argumentSlice {
@@ -213,8 +230,8 @@ func returnDir(argument string) string {
 	return dir
 }
 
-func createJob(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
-	jobs++
+func startJob(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
+	jobsCounter++
 	input := inputs[:len(inputs)-1]
 	// go parseTokens(input, builtinCommands, prefixCompleter)
 	// fmt.Fprintf(os.Stdout, "[%d] %d", jobs, os.Getpid()) //This could work ig. but not for now, it doesnt reprint
@@ -226,9 +243,22 @@ func createJob(inputs []string, builtinCommands []string, prefixCompleter *readl
 		fmt.Fprintf(os.Stdout, "Error: Job cannot be created\n")
 		return
 	}
-	pId := cmd.Process.Pid
-	fmt.Fprintf(os.Stdout, "[%d] %d\n", jobs, pId)
+	currJob := createJob()
+	currJob.jobId = jobsCounter
+	currJob.recent = true
+	currJob.processId = cmd.Process.Pid
+	currJob.command = strings.Join(inputs, " ")
+	copy(currJob.status[:7], []byte("Running"))
+	// fmt.Printf("'%s'\n", currJob.status)
+	jobs = append(jobs, currJob)
+	fmt.Fprintf(os.Stdout, "[%d] %d\n", currJob.jobId, currJob.processId)
 	go cmd.Wait()
+}
+
+func handleJobs(outputWriter io.Writer) {
+	for _, job := range jobs {
+		fmt.Fprintf(outputWriter, "[%d]+  %s%s\n", job.jobId, string(job.status), job.command)
+	}
 }
 
 func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
@@ -292,10 +322,6 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 	executeCommand(command, arguments, builtinCommands, os.Stdout, os.Stderr, prefixCompleter)
 
 }
-func handleJobs() {
-	fmt.Printf("")
-}
-
 func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
 	switch command {
 	case "exit":
@@ -325,7 +351,7 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 		handleComplete(argumentSlice, outputWriter, errorWriter, prefixCompleter)
 		return
 	case "jobs":
-		handleJobs()
+		handleJobs(outputWriter)
 		return
 	case "":
 		return
