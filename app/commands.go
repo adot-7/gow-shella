@@ -151,9 +151,12 @@ func registerCompletion(arguments []string, outputWriter io.Writer, errorWriter 
 			pc.SetChildren([]readline.PrefixCompleterInterface{
 				readline.PcItemDynamic(fetchCompletions(arguments[1]))},
 			)
+			return
 		}
-		// fmt.Fprintf(outputWriter, "%s!=%s\n", string(pc.GetName()), arguments[2])
 	}
+	newCompleters := prefixCompleter.GetChildren()
+	newCompleters = append(newCompleters, readline.PcItemDynamic(fetchCompletions(arguments[1])))
+	prefixCompleter.SetChildren(newCompleters)
 	// print(prefixCompleter.Tree("    "))
 
 }
