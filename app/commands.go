@@ -115,10 +115,10 @@ func fetchCompletions(executablePath string) func(string) []string {
 
 		inputs[0] = tokenizedInput[0]
 		inputs[1] = tokenizedInput[len(tokenizedInput)-1]
-		if len(tokenizedInput) >= 3 {
+		if len(tokenizedInput) >= 1 {
 			inputs[2] = tokenizedInput[len(tokenizedInput)-2]
 		} else {
-			inputs[2] = inputs[1]
+			inputs[2] = inputs[0]
 		}
 		// fmt.Println(inputs)
 		cmd := exec.Command(executablePath, inputs...)
