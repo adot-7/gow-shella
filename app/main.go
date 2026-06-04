@@ -156,7 +156,6 @@ func main() {
 
 	for loop {
 		// fmt.Print("$ ")
-
 		// acceptableCommands = append(acceptableCommands, "exit")
 		// acceptableCommands = append(acceptableCommands, "echo")
 		// input, err := reader.ReadString('\n')
@@ -172,6 +171,10 @@ func main() {
 		input = strings.TrimSpace(input)
 		// inputs := strings.SplitN(input, " ", 2)
 		inputs := tokenize(input)
+		if inputs[len(inputs)-1] == "&" {
+			createJob(inputs, builtinCommands, completer)
+			continue
+		}
 		parseTokens(inputs, builtinCommands, completer)
 		// fmt.Println(inputs[0])
 		// command := inputs[0]

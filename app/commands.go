@@ -15,6 +15,7 @@ import (
 
 // var completionsDirectory = filepath.Join(returnDir("~"), "/gow-shella/completions")
 var completionsMap = make(map[string]string, 0)
+var jobs = 0
 
 func handleType(builtinCommands []string, argumentSlice []string, outputWriter io.Writer) {
 	for _, argument := range argumentSlice {
@@ -210,6 +211,24 @@ func returnDir(argument string) string {
 		dir = os.Getenv("HOME") + argument
 	}
 	return dir
+}
+
+func createJob(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
+	jobs++
+	input := inputs[:len(inputs)-1]
+	// go parseTokens(input, builtinCommands, prefixCompleter)
+	// fmt.Fprintf(os.Stdout, "[%d] %d", jobs, os.Getpid()) //This could work ig. but not for now, it doesnt reprint
+	cmd := exec.Command(input[0], input[1:]...)
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Start()
+	if err != nil {
+		fmt.Fprintf(os.Stdout, "Error: Job cannot be created\n")
+		return
+	}
+	pId := cmd.Process.Pid
+	fmt.Fprintf(os.Stdout, "[%d] %d\n", jobs, pId)
+	go cmd.Wait()
 }
 
 func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
