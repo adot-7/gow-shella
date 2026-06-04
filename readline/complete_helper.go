@@ -178,7 +178,7 @@ func doInternal(p PrefixCompleterInterface, line []rune, pos int, origLine []run
 			} else {
 				if runes.HasPrefix(childName, line) {
 					// fmt.Printf("i/p:'%s' and childname:%s", string(line), string(childName))
-					if len(childName) >= 2 && childName[len(childName)-2] == '/' {
+					if childName[len(childName)-2] == '/' {
 						newLine = append(newLine, childName[len(line):len(childName)-1])
 					} else {
 						newLine = append(newLine, childName[len(line):])

@@ -1,2 +1,2 @@
-#!/bin/bash
-echo "hi\\nthere"
+#!/usr/bin/env python3
+print("run")

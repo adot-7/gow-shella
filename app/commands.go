@@ -108,12 +108,13 @@ func checkCompletion(arguments []string, outputWriter io.Writer) {
 }
 func fetchCompletions(executablePath string) func(string) []string {
 	return func(s string) []string {
-		cmd := exec.Command("bash", executablePath)
+		cmd := exec.Command(executablePath)
 		output, err := cmd.Output()
 		if err != nil {
+			fmt.Fprintf(os.Stdout, "the output: %s\n", err.Error())
 			return []string{""}
 		}
-		// fmt.Fprintf(os.Stdout, "the output: %s\n", string(output))
+		// fmt.Fprintf(os.Stdout, "the output: %v\n", strings.Fields(string(output)))
 		return strings.Fields(string(output))
 	}
 }
