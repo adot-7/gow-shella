@@ -242,6 +242,10 @@ func handleJobTermination(cmd *exec.Cmd, jobId int) {
 	jobs[jobId-1].trailing = 1
 }
 func startJob(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
+
+	if len(inputs) == 1 {
+		return
+	}
 	jobsCounter++
 	input := inputs[:len(inputs)-1]
 	// go parseTokens(input, builtinCommands, prefixCompleter)
@@ -263,10 +267,17 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 	// fmt.Printf("'%s'\n", currJob.status)
 	jobs = append(jobs, currJob)
 	if currJob.jobId > 1 {
-		jobs[currJob.jobId-2].recent = "-"
-		for i, _ := range jobs[:currJob.jobId-2] {
-			jobs[i].recent = " "
+		// jobs[currJob.jobId-2].recent = "-"
+		for i := len(jobs) - 2; i >= 0; i-- {
+			if jobs[i].recent == "+" {
+				jobs[i].recent = "-"
+			} else {
+				jobs[i].recent = " "
+			}
 		}
+		// for i, _ := range jobs[:currJob.jobId-2] {
+		// 	jobs[i].recent = " "
+		// }
 	}
 	fmt.Fprintf(os.Stdout, "[%d] %d\n", currJob.jobId, currJob.processId)
 	go handleJobTermination(cmd, currJob.jobId)
@@ -275,9 +286,29 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 func handleJobs(outputWriter io.Writer) {
 	for i, _ := range jobs {
 		if jobs[i].trailing != 2 {
+			// plusRecent := false // true: not updated, false: updated
 			fmt.Fprintf(outputWriter, "[%d]%s  %s%s\n", jobs[i].jobId, jobs[i].recent, string(jobs[i].status), jobs[i].command[:len(jobs[i].command)-jobs[i].trailing])
 			if jobs[i].trailing == 1 {
 				jobs[i].trailing = 2
+				switch jobs[i].recent {
+				case "+":
+					if i >= 1 {
+						jobs[i-1].recent = "+"
+						if i >= 2 {
+							jobs[i-2].recent = "-"
+						}
+					}
+				case "-":
+					jobs[i-1].recent = "-"
+
+				}
+			}
+		}
+	}
+	for i := len(jobs) - 1; i >= 0; i-- {
+		if jobs[i].trailing == 0 {
+			if jobs[i].recent == " " {
+
 			}
 		}
 	}

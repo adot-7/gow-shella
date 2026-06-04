@@ -171,7 +171,7 @@ func main() {
 		input = strings.TrimSpace(input)
 		// inputs := strings.SplitN(input, " ", 2)
 		inputs := tokenize(input)
-		if inputs[len(inputs)-1] == "&" {
+		if len(inputs) >= 1 && inputs[len(inputs)-1] == "&" {
 			startJob(inputs, builtinCommands, completer)
 			continue
 		}
