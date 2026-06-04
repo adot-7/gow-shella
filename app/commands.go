@@ -20,7 +20,7 @@ var jobsCounter = 0
 
 type job struct {
 	jobId     int
-	recent    bool
+	recent    string
 	processId int
 	status    []byte
 	command   string
@@ -29,6 +29,7 @@ type job struct {
 func createJob() job {
 	return job{
 		status: bytes.Repeat([]byte(" "), 24),
+		recent: " ",
 	}
 }
 
@@ -245,19 +246,22 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 	}
 	currJob := createJob()
 	currJob.jobId = jobsCounter
-	currJob.recent = true
+	currJob.recent = "+"
 	currJob.processId = cmd.Process.Pid
 	currJob.command = strings.Join(inputs, " ")
 	copy(currJob.status[:7], []byte("Running"))
 	// fmt.Printf("'%s'\n", currJob.status)
 	jobs = append(jobs, currJob)
+	if currJob.jobId > 1 {
+		jobs[currJob.jobId-2].recent = "-"
+	}
 	fmt.Fprintf(os.Stdout, "[%d] %d\n", currJob.jobId, currJob.processId)
 	go cmd.Wait()
 }
 
 func handleJobs(outputWriter io.Writer) {
 	for _, job := range jobs {
-		fmt.Fprintf(outputWriter, "[%d]+  %s%s\n", job.jobId, string(job.status), job.command)
+		fmt.Fprintf(outputWriter, "[%d]%s  %s%s\n", job.jobId, job.recent, string(job.status), job.command)
 	}
 }
 
