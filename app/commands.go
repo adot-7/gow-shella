@@ -283,11 +283,17 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 	go handleJobTermination(cmd, currJob.jobId)
 }
 
-func handleJobs(outputWriter io.Writer) {
+func handleJobs(outputWriter io.Writer, showRunning bool) {
 	for i, _ := range jobs {
 		if jobs[i].trailing != 2 {
 			// plusRecent := false // true: not updated, false: updated
-			fmt.Fprintf(outputWriter, "[%d]%s  %s%s\n", jobs[i].jobId, jobs[i].recent, string(jobs[i].status), jobs[i].command[:len(jobs[i].command)-jobs[i].trailing])
+			if showRunning {
+				fmt.Fprintf(outputWriter, "[%d]%s  %s%s\n", jobs[i].jobId, jobs[i].recent, string(jobs[i].status), jobs[i].command[:len(jobs[i].command)-jobs[i].trailing])
+			} else {
+				if jobs[i].trailing == 1 {
+					fmt.Fprintf(outputWriter, "[%d]%s  %s%s\n", jobs[i].jobId, jobs[i].recent, string(jobs[i].status), jobs[i].command[:len(jobs[i].command)-jobs[i].trailing])
+				}
+			}
 			if jobs[i].trailing == 1 {
 				jobs[i].trailing = 2
 			}
@@ -373,6 +379,7 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 
 }
 func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
+	handleJobs(outputWriter, false)
 	switch command {
 	case "exit":
 		handleExit(outputWriter, "")
@@ -401,7 +408,7 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 		handleComplete(argumentSlice, outputWriter, errorWriter, prefixCompleter)
 		return
 	case "jobs":
-		handleJobs(outputWriter)
+		handleJobs(outputWriter, true)
 		return
 	case "":
 		return
