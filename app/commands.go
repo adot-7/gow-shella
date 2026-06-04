@@ -273,6 +273,9 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 	executeCommand(command, arguments, builtinCommands, os.Stdout, os.Stderr, prefixCompleter)
 
 }
+func handleJobs() {
+	fmt.Printf("")
+}
 
 func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
 	switch command {
@@ -301,6 +304,9 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 			return
 		}
 		handleComplete(argumentSlice, outputWriter, errorWriter, prefixCompleter)
+		return
+	case "jobs":
+		handleJobs()
 		return
 	case "":
 		return

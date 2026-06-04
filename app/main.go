@@ -116,7 +116,7 @@ func listdirectories(path string) func(string) []string {
 func main() {
 	// test()
 	loop := true
-	builtinCommands := []string{"exit", "echo", "type", "pwd", "cd", "complete"}
+	builtinCommands := []string{"exit", "echo", "type", "pwd", "cd", "complete", "jobs"}
 	var completers []readline.PrefixCompleterInterface
 	for _, builtin := range builtinCommands {
 		completers = append(completers,
