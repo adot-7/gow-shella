@@ -108,6 +108,17 @@ func checkCompletion(arguments []string, outputWriter io.Writer) {
 }
 func fetchCompletions(executablePath string) func(string) []string {
 	return func(s string) []string {
+		inputs := []string{"argv[1]", "argv[2]", "argv[3]"}
+		tokenizedInput := tokenize(s)
+		inputs[0] = tokenizedInput[0]
+		if len(tokenizedInput) < 3 {
+			inputs[1] = tokenizedInput[1]
+			inputs[2] = ""
+		} else {
+			inputs[1] = tokenizedInput[2]
+			inputs[2] = tokenizedInput[1]
+		}
+
 		cmd := exec.Command(executablePath)
 		output, err := cmd.Output()
 		if err != nil {
