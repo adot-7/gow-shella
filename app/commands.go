@@ -290,24 +290,23 @@ func handleJobs(outputWriter io.Writer) {
 			fmt.Fprintf(outputWriter, "[%d]%s  %s%s\n", jobs[i].jobId, jobs[i].recent, string(jobs[i].status), jobs[i].command[:len(jobs[i].command)-jobs[i].trailing])
 			if jobs[i].trailing == 1 {
 				jobs[i].trailing = 2
-				switch jobs[i].recent {
-				case "+":
-					if i >= 1 {
-						jobs[i-1].recent = "+"
-						if i >= 2 {
-							jobs[i-2].recent = "-"
-						}
-					}
-				case "-":
-					jobs[i-1].recent = "-"
-
-				}
 			}
 		}
 	}
 	for i := len(jobs) - 1; i >= 0; i-- {
 		if jobs[i].trailing == 0 {
 			if jobs[i].recent == " " {
+				jobs[i].recent = "+"
+				if i >= 1 {
+					j := i - 1
+					for {
+						if jobs[i].trailing == 0 {
+							jobs[j].recent = "-"
+							return
+						}
+						j--
+					}
+				}
 
 			}
 		}
