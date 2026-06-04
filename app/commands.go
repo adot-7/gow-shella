@@ -74,7 +74,13 @@ func handleComplete(arguments []string, outputWriter io.Writer, errorWriter io.W
 			fmt.Fprintf(errorWriter, "complete: insufficient arguments\n")
 			return
 		}
-		registerCompletion(arguments, outputWriter, errorWriter, prefixCompleter)
+		registerCompletion(arguments, prefixCompleter)
+	case "-r":
+		if len(arguments) < 2 {
+			fmt.Fprintf(errorWriter, "complete: insufficient arguments\n")
+			return
+		}
+		removeCompletion(arguments, prefixCompleter)
 	}
 }
 
@@ -139,7 +145,21 @@ func fetchCompletions(executablePath string) func(string) []string {
 	}
 }
 
-func registerCompletion(arguments []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
+func removeCompletion(arguments []string, prefixCompleter *readline.PrefixCompleter) {
+	_, ok := completionsMap[arguments[1]]
+	if !ok {
+		return
+	}
+	for _, pc := range prefixCompleter.GetChildren() {
+		if strings.TrimSpace(string(pc.GetName())) == arguments[1] {
+			pc.SetChildren([]readline.PrefixCompleterInterface{
+				readline.PcItemDynamic(listdirectories("./"))},
+			)
+			return
+		}
+	}
+}
+func registerCompletion(arguments []string, prefixCompleter *readline.PrefixCompleter) {
 	/*
 		my dumdum went the file way like a normal shell but its more headaceh for codecrafers test so doing in memory
 
