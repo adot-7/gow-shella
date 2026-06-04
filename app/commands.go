@@ -23,13 +23,15 @@ type job struct {
 	recent    string
 	processId int
 	status    []byte
+	trailing  int //0 if running, 1 if done. to truncate the trailing & from done processes. 2 if not to be shown in subsequent jobs command.
 	command   string
 }
 
 func createJob() job {
 	return job{
-		status: bytes.Repeat([]byte(" "), 24),
-		recent: " ",
+		status:   bytes.Repeat([]byte(" "), 24),
+		recent:   " ",
+		trailing: 0,
 	}
 }
 
@@ -230,7 +232,15 @@ func returnDir(argument string) string {
 	}
 	return dir
 }
-
+func handleJobTermination(cmd *exec.Cmd, jobId int) {
+	err := cmd.Wait()
+	if err != nil {
+		fmt.Println("damn")
+		return
+	}
+	copy(jobs[jobId-1].status, []byte("Done   "))
+	jobs[jobId-1].trailing = 1
+}
 func startJob(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
 	jobsCounter++
 	input := inputs[:len(inputs)-1]
@@ -249,7 +259,7 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 	currJob.recent = "+"
 	currJob.processId = cmd.Process.Pid
 	currJob.command = strings.Join(inputs, " ")
-	copy(currJob.status[:7], []byte("Running"))
+	copy(currJob.status, []byte("Running"))
 	// fmt.Printf("'%s'\n", currJob.status)
 	jobs = append(jobs, currJob)
 	if currJob.jobId > 1 {
@@ -259,12 +269,17 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 		}
 	}
 	fmt.Fprintf(os.Stdout, "[%d] %d\n", currJob.jobId, currJob.processId)
-	go cmd.Wait()
+	go handleJobTermination(cmd, currJob.jobId)
 }
 
 func handleJobs(outputWriter io.Writer) {
-	for _, job := range jobs {
-		fmt.Fprintf(outputWriter, "[%d]%s  %s%s\n", job.jobId, job.recent, string(job.status), job.command)
+	for i, _ := range jobs {
+		if jobs[i].trailing != 2 {
+			fmt.Fprintf(outputWriter, "[%d]%s  %s%s\n", jobs[i].jobId, jobs[i].recent, string(jobs[i].status), jobs[i].command[:len(jobs[i].command)-jobs[i].trailing])
+			if jobs[i].trailing == 1 {
+				jobs[i].trailing = 2
+			}
+		}
 	}
 }
 
