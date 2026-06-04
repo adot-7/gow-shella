@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -119,6 +120,12 @@ func fetchCompletions(executablePath string) func(string) []string {
 		}
 		// fmt.Println(inputs)
 		cmd := exec.Command(executablePath, inputs...)
+		env := os.Environ()
+		comp_line := s
+		comp_point := strconv.Itoa(len([]byte(s)))
+		env = append(env, "COMP_LINE=%s", comp_line)
+		env = append(env, "COMP_POINT=%s", comp_point)
+		cmd.Env = env
 		output, err := cmd.Output()
 		if err != nil {
 			fmt.Fprintf(os.Stdout, "the output: %s\n", err.Error())
