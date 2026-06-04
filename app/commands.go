@@ -121,10 +121,11 @@ func fetchCompletions(executablePath string) func(string) []string {
 		// fmt.Println(inputs)
 		cmd := exec.Command(executablePath, inputs...)
 		env := os.Environ()
-		comp_line := s
+		comp_line := fmt.Sprintf("COMP_LINE=%s", s)
 		comp_point := strconv.Itoa(len([]byte(s)))
-		env = append(env, "COMP_LINE=%s", comp_line)
-		env = append(env, "COMP_POINT=%s", comp_point)
+		comp_point = fmt.Sprintf("COMP_POINT=%s", comp_point)
+		env = append(env, comp_line)
+		env = append(env, comp_point)
 		cmd.Env = env
 		output, err := cmd.Output()
 		if err != nil {
