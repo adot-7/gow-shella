@@ -118,8 +118,8 @@ func fetchCompletions(executablePath string) func(string) []string {
 			inputs[1] = tokenizedInput[2]
 			inputs[2] = tokenizedInput[1]
 		}
-
-		cmd := exec.Command(executablePath)
+		// fmt.Println(inputs)
+		cmd := exec.Command(executablePath, inputs...)
 		output, err := cmd.Output()
 		if err != nil {
 			fmt.Fprintf(os.Stdout, "the output: %s\n", err.Error())
