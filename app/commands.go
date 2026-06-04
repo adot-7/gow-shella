@@ -266,10 +266,10 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 	copy(currJob.status, []byte("Running"))
 	// fmt.Printf("'%s'\n", currJob.status)
 	jobs = append(jobs, currJob)
-	if currJob.jobId > 1 {
+	if len(jobs) > 1 {
 		// jobs[currJob.jobId-2].recent = "-"
 		for i := len(jobs) - 2; i >= 0; i-- {
-			if jobs[i].recent == "+" {
+			if jobs[i].recent == "+" && jobs[i].trailing != 2 {
 				jobs[i].recent = "-"
 			} else {
 				jobs[i].recent = " "
