@@ -309,17 +309,12 @@ func handleJobs(outputWriter io.Writer, showRunning bool) {
 	for i := len(jobs) - 1; i >= 0; i-- {
 		if jobs[i].trailing == 0 || jobs[i].trailing == 1 {
 			jobs[i].recent = "+"
-			if i >= 1 {
-				j := i - 1
-				for {
-					if jobs[j].trailing == 0 || jobs[j].trailing == 1 {
-						jobs[j].recent = "-"
-						return
-					}
-					j--
+			for j := i - 1; j >= 0; j-- {
+				if jobs[j].trailing == 0 || jobs[j].trailing == 1 {
+					jobs[j].recent = "-"
+					return
 				}
 			}
-
 		}
 	}
 }
