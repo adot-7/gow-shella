@@ -380,16 +380,20 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 		}
 		arguments = append(arguments, token)
 	}
+	pipeArgs := arguments
+	arguments = arguments[1:]
 	pipeCommands := make([][]string, 0)
 	j := 0
 	// fmt.Printf("%v\n", arguments)
-	pipeArgs := arguments
-	arguments = arguments[1:]
 	for i, token := range pipeArgs {
 		if token == "|" {
 			pipeCommands = append(pipeCommands, pipeArgs[j:i])
 			j = i + 1
 		}
+	}
+	if len(pipeArgs) == 0 {
+		executeCommand(command, arguments, builtinCommands, os.Stdout, os.Stderr, prefixCompleter)
+		return
 	}
 	pipeCommands = append(pipeCommands, pipeArgs[j:])
 	//for each command, set up exec.Command(), store its cmd.stdoutpipe. for the next command, give the stored stdout to the stdin of this command(). if its last, you set up
@@ -419,7 +423,7 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 		}
 		cmds[i+1].Stdin = stdoutPipe
 	}
-	var b strings.Builder
+	var b bytes.Buffer
 	cmds[len(cmds)-1].Stdout = &b
 
 	for i := len(cmds) - 1; i >= 0; i-- { //starting reverse because:If you start the first command first, it might generate data and write to a pipe whose reading end hasn't opened yet
@@ -434,11 +438,11 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 			fmt.Printf("damn error: %v\n", err)
 		}
 	}
-	fmt.Printf("%s %d\n", b.String(), b.Len())
+	// fmt.Printf("%s %d\n", b.String(), b.Len())
 	if len(pipeCommands) > 0 {
 		return
 	}
-	executeCommand(command, arguments, builtinCommands, os.Stdout, os.Stderr, prefixCompleter)
+
 }
 func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
 	switch command {
