@@ -438,7 +438,7 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 			fmt.Printf("damn error: %v\n", err)
 		}
 	}
-	fmt.Printf("%s", b.String())
+	fmt.Printf("'%s'", b.String())
 }
 func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
 	switch command {
