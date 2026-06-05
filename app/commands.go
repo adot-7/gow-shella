@@ -257,6 +257,8 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 	input := inputs[:len(inputs)-1]
 	// go parseTokens(input, builtinCommands, prefixCompleter)
 	// fmt.Fprintf(os.Stdout, "[%d] %d", jobs, os.Getpid()) //This could work ig. but not for now, it doesnt reprint
+	// inpCombined := strings.Join(input, " ")
+	// cmd := exec.Command(input[0], input[1:]...)
 	cmd := exec.Command(input[0], input[1:]...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -328,16 +330,17 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 	}
 	command := inputs[0]
 	var arguments []string
-	for i, token := range inputs[1:] {
+	for i, token := range inputs {
 		if token == ">" || token == "1>" || token == ">>" || token == "1>>" || token == "2>" || token == "2>>" {
 			if i == len(inputs)-3 {
 				//means second last token
 				//for ["echo", "hello", ">", "file.txt"], len(inputs) is 4,
 				// but we iterate from inputs[1:] so position of > becomes 1 which is len(inputs)-3
 				isRedirect = true
-				if token == ">>" || token == "1>>" {
+				switch token {
+				case ">>", "1>>":
 					isAppend = true
-				} else if token == "2>" || token == "2>>" {
+				case "2>", "2>>":
 					isErrorWriter = true
 					isAppend = true
 				}
@@ -377,8 +380,65 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 		}
 		arguments = append(arguments, token)
 	}
-	executeCommand(command, arguments, builtinCommands, os.Stdout, os.Stderr, prefixCompleter)
+	pipeCommands := make([][]string, 0)
+	j := 0
+	// fmt.Printf("%v\n", arguments)
+	pipeArgs := arguments
+	arguments = arguments[1:]
+	for i, token := range pipeArgs {
+		if token == "|" {
+			pipeCommands = append(pipeCommands, pipeArgs[j:i])
+			j = i + 1
+		}
+	}
+	pipeCommands = append(pipeCommands, pipeArgs[j:])
+	//for each command, set up exec.Command(), store its cmd.stdoutpipe. for the next command, give the stored stdout to the stdin of this command(). if its last, you set up
+	// var currStdOut io.ReadCloser
+	// var currStdIn io.WriteCloser
+	// fmt.Printf("%v: %d\n", pipeCommands, len(pipeCommands))
+	cmds := make([]*exec.Cmd, len(pipeCommands))
+	for i, currCommand := range pipeCommands {
+		// cmd := exec.Command("/bin/bash", "-c", currCommand)
+		// var cmd *exec.Cmd
+		if len(currCommand) == 1 {
+			cmds[i] = exec.Command(currCommand[0])
+		} else {
+			cmds[i] = exec.Command(currCommand[0], currCommand[1:]...)
+		}
+	}
 
+	// _, err := fmt.Printf("%v: %d\n", &cmds[0].Args, len(cmds[0].Args))
+	// if err != nil {
+	// 	fmt.Printf("damn error: %v\n", err)
+	// }
+
+	for i := 0; i <= len(cmds)-2; i++ {
+		stdoutPipe, err := cmds[i].StdoutPipe()
+		if err != nil {
+			fmt.Printf("damn error: %v\n", err)
+		}
+		cmds[i+1].Stdin = stdoutPipe
+	}
+	var b strings.Builder
+	cmds[len(cmds)-1].Stdout = &b
+
+	for i := len(cmds) - 1; i >= 0; i-- { //starting reverse because:If you start the first command first, it might generate data and write to a pipe whose reading end hasn't opened yet
+		err := cmds[i].Start()
+		if err != nil {
+			fmt.Printf("damn error: %v\n", err)
+		}
+	}
+	for _, cmd := range cmds {
+		err := cmd.Wait()
+		if err != nil {
+			fmt.Printf("damn error: %v\n", err)
+		}
+	}
+	fmt.Printf("%s %d\n", b.String(), b.Len())
+	if len(pipeCommands) > 0 {
+		return
+	}
+	executeCommand(command, arguments, builtinCommands, os.Stdout, os.Stderr, prefixCompleter)
 }
 func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
 	switch command {

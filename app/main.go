@@ -114,6 +114,7 @@ func listdirectories(path string) func(string) []string {
 }
 
 func main() {
+
 	// test()
 	loop := true
 	builtinCommands := []string{"exit", "echo", "type", "pwd", "cd", "complete", "jobs"}
