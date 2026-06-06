@@ -448,11 +448,12 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 			fmt.Printf("damn error: %v\n", err)
 		}
 	}
+
 	for _, cmd := range cmds {
-		err := cmd.Wait()
-		if err != nil {
-			fmt.Printf("damn error: %v\n", err)
-		}
+		go cmd.Wait()
+		// if err != nil {
+		// 	fmt.Printf("damn error: %v\n", err)
+		// }
 	}
 	// fmt.Printf("buffer: %v\n", b.Len())
 	fmt.Fprintf(os.Stdout, "%s", b.String())
