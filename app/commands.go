@@ -345,7 +345,7 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 	}
 	command := inputs[0]
 	var arguments []string
-	for i, token := range inputs {
+	for i, token := range inputs[1:] {
 		if token == ">" || token == "1>" || token == ">>" || token == "1>>" || token == "2>" || token == "2>>" {
 			if i == len(inputs)-3 {
 				//means second last token
@@ -360,10 +360,11 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 					isAppend = true
 				}
 				continue
+			} else {
+				fmt.Fprintf(os.Stderr, "Too many arguments after redirect\n")
+				return
 			}
 
-			fmt.Fprintf(os.Stderr, "Too many arguments after redirect\n")
-			return
 		}
 		if isRedirect && i == len(inputs)-2 { //last iteration
 			destination := returnDir(token)
@@ -395,8 +396,8 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 		}
 		arguments = append(arguments, token)
 	}
-	pipeArgs := arguments
-	arguments = arguments[1:]
+	pipeArgs := slices.Concat([]string{command}, arguments)
+	// arguments = arguments[1:]
 	pipeCommands := make([][]string, 0)
 	j := 0
 	// fmt.Printf("%v\n", arguments)
