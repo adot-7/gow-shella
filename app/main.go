@@ -174,9 +174,9 @@ func main() {
 		inputs := tokenize(input)
 		if len(inputs) >= 1 && inputs[len(inputs)-1] == "&" {
 			startJob(inputs, builtinCommands, completer)
-			continue
+		} else {
+			parseTokens(inputs, builtinCommands, completer)
 		}
-		parseTokens(inputs, builtinCommands, completer)
 		handleJobs(os.Stdout, false)
 		// fmt.Println(inputs[0])
 		// command := inputs[0]

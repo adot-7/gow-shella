@@ -245,14 +245,6 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 	if len(inputs) == 1 {
 		return
 	}
-	jobsCounter++
-	jobId := jobsCounter
-	for i := range jobs {
-		if jobs[i].trailing == 2 {
-			jobId = jobs[i].jobId
-			jobsCounter--
-		}
-	}
 
 	input := inputs[:len(inputs)-1]
 	// go parseTokens(input, builtinCommands, prefixCompleter)
@@ -267,14 +259,36 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 		fmt.Fprintf(os.Stdout, "Error: Job cannot be created\n")
 		return
 	}
-	currJob := createJob()
-	currJob.jobId = jobId
+
+	var currJob job
+	var jobId int
+	reusableId := -1
+
+	for i := range jobs {
+		if jobs[i].trailing == 2 {
+			reusableId = i
+			break
+		}
+	}
+	currJob = createJob()
 	currJob.recent = "+"
 	currJob.processId = cmd.Process.Pid
 	currJob.command = strings.Join(inputs, " ")
 	copy(currJob.status, []byte("Running"))
+
+	if reusableId != -1 {
+		jobId = jobs[reusableId].jobId
+		currJob.jobId = jobId
+		jobs[reusableId] = currJob
+	} else {
+		jobsCounter++
+		jobId = jobsCounter
+		currJob.jobId = jobId
+		jobs = append(jobs, currJob)
+	}
+
 	// fmt.Printf("'%s'\n", currJob.status)
-	jobs = append(jobs, currJob)
+
 	if len(jobs) > 1 {
 		// jobs[currJob.jobId-2].recent = "-"
 		for i := len(jobs) - 2; i >= 0; i-- {
@@ -293,12 +307,13 @@ func startJob(inputs []string, builtinCommands []string, prefixCompleter *readli
 }
 
 func handleJobs(outputWriter io.Writer, showRunning bool) {
-	for i, _ := range jobs {
+	for i := range jobs {
 		if jobs[i].trailing != 2 {
 			// plusRecent := false // true: not updated, false: updated
-			if showRunning {
+			switch showRunning {
+			case true:
 				fmt.Fprintf(outputWriter, "[%d]%s  %s%s\n", jobs[i].jobId, jobs[i].recent, string(jobs[i].status), jobs[i].command[:len(jobs[i].command)-jobs[i].trailing])
-			} else {
+			case false:
 				if jobs[i].trailing == 1 {
 					fmt.Fprintf(outputWriter, "[%d]%s  %s%s\n", jobs[i].jobId, jobs[i].recent, string(jobs[i].status), jobs[i].command[:len(jobs[i].command)-jobs[i].trailing])
 				}
@@ -391,11 +406,12 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 			j = i + 1
 		}
 	}
-	if len(pipeArgs) == 0 {
+	if len(pipeCommands) == 0 {
 		executeCommand(command, arguments, builtinCommands, os.Stdout, os.Stderr, prefixCompleter)
 		return
 	}
 	pipeCommands = append(pipeCommands, pipeArgs[j:])
+
 	//for each command, set up exec.Command(), store its cmd.stdoutpipe. for the next command, give the stored stdout to the stdin of this command(). if its last, you set up
 	// var currStdOut io.ReadCloser
 	// var currStdIn io.WriteCloser
@@ -438,7 +454,9 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 			fmt.Printf("damn error: %v\n", err)
 		}
 	}
-	fmt.Printf("'%s'", b.String())
+	// fmt.Printf("buffer: %v\n", b.Len())
+	fmt.Fprintf(os.Stdout, "%s", b.String())
+	// time.Sleep(999999999)
 }
 func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
 	switch command {
