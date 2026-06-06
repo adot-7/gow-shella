@@ -439,8 +439,8 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 		}
 		cmds[i+1].Stdin = stdoutPipe
 	}
-	var b bytes.Buffer
-	cmds[len(cmds)-1].Stdout = &b
+	// var b bytes.Buffer
+	cmds[len(cmds)-1].Stdout = os.Stdout
 
 	for i := len(cmds) - 1; i >= 0; i-- { //starting reverse because:If you start the first command first, it might generate data and write to a pipe whose reading end hasn't opened yet
 		err := cmds[i].Start()
@@ -448,15 +448,14 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 			fmt.Printf("damn error: %v\n", err)
 		}
 	}
-
 	for _, cmd := range cmds {
-		go cmd.Wait()
-		// if err != nil {
-		// 	fmt.Printf("damn error: %v\n", err)
-		// }
+		err := cmd.Wait()
+		if err != nil {
+			fmt.Printf("damn error: %v\n", err)
+		}
 	}
 	// fmt.Printf("buffer: %v\n", b.Len())
-	fmt.Fprintf(os.Stdout, "%s", b.String())
+	// fmt.Fprintf(os.Stdout, "%s", b.String())
 	// time.Sleep(999999999)
 }
 func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
