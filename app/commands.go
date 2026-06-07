@@ -338,11 +338,16 @@ func handleJobs(outputWriter io.Writer, showRunning bool) {
 }
 
 func readFromHistory(arguments []string) {
-	if len(arguments) < 2 {
+	var historyPath string
+	if len(arguments) == 0 {
 		fmt.Fprintln(os.Stderr, "history: insufficient arguments")
 		return
 	}
-	historyPath := arguments[1]
+	if len(arguments) == 1 {
+		historyPath = arguments[0]
+	} else {
+		historyPath = arguments[1]
+	}
 	f, err := os.ReadFile(historyPath)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "history: cannot read history file")
