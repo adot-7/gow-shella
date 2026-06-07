@@ -18,6 +18,8 @@ import (
 // var completionsDirectory = filepath.Join(returnDir("~"), "/gow-shella/completions")
 var completionsMap = make(map[string]string, 0)
 var jobsCounter = 0
+var jobs = make([]job, 0)
+var historyAppendIdx = 0
 
 type job struct {
 	jobId     int
@@ -35,8 +37,6 @@ func createJob() job {
 		trailing: 0,
 	}
 }
-
-var jobs = make([]job, 0)
 
 func handleType(builtinCommands []string, argumentSlice []string, outputWriter io.Writer) {
 	for _, argument := range argumentSlice {
@@ -380,8 +380,9 @@ func appendToHistory(arguments []string) {
 		fmt.Fprintln(os.Stderr, "history: cannot open history file")
 		return
 	}
-	data := strings.Join(history, "\n")
+	data := strings.Join(history[historyAppendIdx:], "\n")
 	data = data + "\n"
+	historyAppendIdx = len(history)
 	f.Write([]byte(data))
 	f.Close()
 }
