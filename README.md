@@ -1,6 +1,6 @@
 Go(w)-Shell(a)
 
-A minimal, completed Go solutions to the
+A minimal, completed Go solution to the
 [Build-Your-Own-Shell](https://app.codecrafters.io/courses/shell/overview) challenge
 
 Overview
