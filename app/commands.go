@@ -465,7 +465,7 @@ func isLetter(r rune) bool {
 	return (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z')
 }
 
-func isValidKey(candidate string) int { //returns index of the end of key candidacy of the string, -1 if the first char itself is not allowed
+func isValidKey(candidate string) (int, int) { //returns index of the end of key candidacy of the string, -1 if the first char itself is not allowed
 	// example:
 	// akash$ash$ a  t  o
 	// 0123456789 10 11 12
@@ -481,21 +481,27 @@ func isValidKey(candidate string) int { //returns index of the end of key candid
 	// token[dollarIdxFrom+1:dollarIdxFrom+1+isvalidkey] = token[1:4] = ato, let $ato = ato
 	// final = final + token[:0] + ash = "akashash"+""+ato=akashashato
 	// new token: token[0+3+1:] = token[4:] = ""
-	var result int
+	end := -1
 	for i, ch := range candidate {
-		result = i
+		end++
+		if ch == '{' && i == 0 {
+			end = strings.IndexRune(candidate, '}')
+			if end == -1 {
+				return -1, -1
+			}
+			return 1, end
+		}
 		if (i == 0) && !(isLetter(ch) || ch == '_') { //first character
-			result = i - 1
+			end = end - 1
 			break
 		}
 		if !isDigit(ch) && !isLetter(ch) && ch != '_' {
-			result = i - 1
+			end = end - 1
 			break
 		}
 		// fmt.Printf("%c is valid at i:%d\n", ch, i)
 	}
-
-	return result + 1
+	return 0, end + 1
 }
 func parseStoreVariable(input string, errorWriter io.Writer) {
 	var (
@@ -548,10 +554,14 @@ func iterKeySubstitue(token string) string {
 	for i := range c {
 		dollarIdxFrom := strings.IndexRune(currentToken, '$')
 		if dollarIdxFrom != -1 {
-			validIdxTo := isValidKey(currentToken[dollarIdxFrom+1:]) // FIX: only upto before next $
-			k := currentToken[dollarIdxFrom+1 : dollarIdxFrom+1+validIdxTo]
+			st, validIdxTo := isValidKey(currentToken[dollarIdxFrom+1:])
+			if st == -1 {
+				return ""
+			}
+			k := currentToken[dollarIdxFrom+1+st : dollarIdxFrom+1+validIdxTo]
+
 			value, ok := declareMap[k]
-			// fmt.Printf("map result: %s\n", value)
+
 			if !ok {
 				value = ""
 
@@ -559,7 +569,7 @@ func iterKeySubstitue(token string) string {
 			final = final + currentToken[:dollarIdxFrom] + value
 			// fmt.Printf("Current token: %s\n", final)
 			if i == c-1 { //last iteration, will give out of bound for slicing so skip
-				if len(currentToken) > dollarIdxFrom+validIdxTo+1 {
+				if len(currentToken) > dollarIdxFrom+validIdxTo+1 && (currentToken[len(currentToken)-1] != '}') {
 					final = final + currentToken[dollarIdxFrom+validIdxTo+1:]
 				} else {
 					continue
@@ -631,6 +641,10 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 		}
 		// fmt.Printf("before sub: %s\n", token)
 		token = iterKeySubstitue(token)
+		if token == "" {
+			fmt.Printf("Parse Error: expected '}'\n")
+			return
+		}
 		// fmt.Printf("after sub: %s\n", token)
 		arguments = append(arguments, token)
 	}
