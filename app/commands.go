@@ -337,10 +337,47 @@ func handleJobs(outputWriter io.Writer, showRunning bool) {
 	}
 }
 
+func readFromHistory(arguments []string) {
+	if len(arguments) < 2 {
+		fmt.Fprintln(os.Stderr, "history: insufficient arguments")
+		return
+	}
+	historyPath := arguments[1]
+	f, err := os.ReadFile(historyPath)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "history: cannot read history file")
+		return
+	}
+	content := string(f)
+	lines := strings.Split(content, "\n")
+	lines = lines[:len(lines)-1] // account for empty line at end.
+	history = append(history, lines...)
+}
+
+func appendToHistory(arguments []string) {
+	// if len(arguments) < 2 {
+	// 	fmt.Fprintln(os.Stderr, "history: insufficient arguments")
+	// 	return
+	// }
+	// historyPath := arguments[1]
+	// data := strings.Join(history, "\n")
+	// f, err := os.WriteFile(historyPath)
+	// if err != nil {
+	// 	fmt.Fprintln(os.Stderr, "history: cannot open history file")
+	// 	return
+	// }
+}
+
 func handleHistory(arguments []string, outputWriter io.Writer) {
+	switch arguments[0] {
+	case "-r":
+		readFromHistory(arguments)
+	case "-a":
+		appendToHistory(arguments)
+	}
 	if len(arguments) == 1 {
 		lim, err := strconv.Atoi(arguments[0])
-		if err!=nil {
+		if err != nil {
 			fmt.Fprintf(os.Stderr, "history: %s: numeric argument required\n", arguments[0])
 			return
 		}
@@ -572,7 +609,7 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 		handleJobs(outputWriter, true)
 		return
 	case "history":
-		if len(argumentSlice) > 1{
+		if len(argumentSlice) > 1 {
 			fmt.Fprintln(os.Stderr, "history: numeric argument required")
 			return
 		}
