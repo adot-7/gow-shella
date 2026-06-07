@@ -568,18 +568,18 @@ func iterKeySubstitue(token string) string {
 			}
 			final = final + currentToken[:dollarIdxFrom] + value
 			nextIdx := dollarIdxFrom + validIdxTo + 1
+			if st == 1 {
+				nextIdx++
+			}
 			// fmt.Printf("Current token: %s\n", final)
 			if i == c-1 { //last iteration, will give out of bound for slicing so skip
-				if len(currentToken) > nextIdx && (currentToken[len(currentToken)-1] != '}') {
+				if len(currentToken) > nextIdx {
 					final = final + currentToken[nextIdx:]
 				} else {
 					continue
 				}
 			}
-			if currentToken[nextIdx] == '}' {
-				nextIdx++
-			}
-			currentToken = currentToken[dollarIdxFrom+validIdxTo+1:]
+			currentToken = currentToken[nextIdx:]
 		}
 	}
 	return final
