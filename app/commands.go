@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -466,6 +467,7 @@ func isLetter(r rune) bool {
 }
 
 func isValidKey(candidate string) (int, int) { //returns index of the end of key candidacy of the string, -1 if the first char itself is not allowed
+	// $hi => 0,2
 	// example:
 	// akash$ash$ a  t  o
 	// 0123456789 10 11 12
@@ -544,10 +546,10 @@ func parseStoreVariable(input string, errorWriter io.Writer) {
 	declareMap[key] = value
 }
 
-func iterKeySubstitue(token string) string {
+func iterKeySubstitue(token string) (string, error) {
 	c := strings.Count(token, "$")
 	if c == 0 {
-		return token
+		return token, nil
 	}
 	currentToken := token
 	final := ""
@@ -556,7 +558,7 @@ func iterKeySubstitue(token string) string {
 		if dollarIdxFrom != -1 {
 			st, validIdxTo := isValidKey(currentToken[dollarIdxFrom+1:])
 			if st == -1 {
-				return ""
+				return "", errors.New("Parse error: expected '}'")
 			}
 			k := currentToken[dollarIdxFrom+1+st : dollarIdxFrom+1+validIdxTo]
 
@@ -564,7 +566,6 @@ func iterKeySubstitue(token string) string {
 
 			if !ok {
 				value = ""
-
 			}
 			final = final + currentToken[:dollarIdxFrom] + value
 			nextIdx := dollarIdxFrom + validIdxTo + 1
@@ -582,7 +583,7 @@ func iterKeySubstitue(token string) string {
 			currentToken = currentToken[nextIdx:]
 		}
 	}
-	return final
+	return final, nil
 }
 
 func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
@@ -643,13 +644,11 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 			executeCommand(command, arguments, builtinCommands, outputWriter, os.Stderr, prefixCompleter)
 			return
 		}
-		// fmt.Printf("before sub: %s\n", token)
-		token = iterKeySubstitue(token)
-		if token == "" {
-			fmt.Printf("Parse Error: expected '}'\n")
+		token, err := iterKeySubstitue(token)
+		if err != nil {
+			fmt.Printf("Parse Error: expected '}' token:%s\n", token)
 			return
 		}
-		// fmt.Printf("after sub: %s\n", token)
 		arguments = append(arguments, token)
 	}
 	pipeArgs := slices.Concat([]string{command}, arguments)
