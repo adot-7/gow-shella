@@ -569,7 +569,7 @@ func iterKeySubstitue(token string) string {
 			final = final + currentToken[:dollarIdxFrom] + value
 			nextIdx := dollarIdxFrom + validIdxTo + 1
 			if st == 1 {
-				nextIdx++
+				nextIdx++ // basically skip this char, because it is curly braces, check isValidKey()
 			}
 			// fmt.Printf("Current token: %s\n", final)
 			if i == c-1 { //last iteration, will give out of bound for slicing so skip
