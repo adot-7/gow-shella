@@ -372,8 +372,10 @@ func handleHistory(arguments []string, outputWriter io.Writer) {
 	switch arguments[0] {
 	case "-r":
 		readFromHistory(arguments)
+		return
 	case "-a":
 		appendToHistory(arguments)
+		return
 	}
 	if len(arguments) == 1 {
 		lim, err := strconv.Atoi(arguments[0])
