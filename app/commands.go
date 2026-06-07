@@ -54,6 +54,9 @@ func handleType(builtinCommands []string, argumentSlice []string, outputWriter i
 }
 func handleExit(outputWriter io.Writer, message string) {
 	fmt.Fprintln(outputWriter, message)
+	if histFile != "" {
+		appendToHistory([]string{histFile})
+	}
 	os.Exit(0)
 }
 func handleEcho(argumentSlice []string, outputWriter io.Writer) {

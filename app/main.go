@@ -19,6 +19,7 @@ import (
 var executablesMap = make(map[string]string)
 var builtinCommands = []string{"exit", "echo", "type", "pwd", "cd", "complete", "jobs", "history"}
 var history []string
+var histFile = os.Getenv("HISTFILE")
 
 func filterInput(r rune) (rune, bool) {
 	switch r {
@@ -116,7 +117,7 @@ func listdirectories(path string) func(string) []string {
 }
 
 func main() {
-	histFile := os.Getenv("HISTFILE")
+
 	if histFile != "" {
 		readFromHistory([]string{histFile})
 	}
@@ -206,8 +207,5 @@ func main() {
 		// 	command =
 		// }
 		// executeCommand(command, arguments, builtinCommands, os.Stdout)
-	}
-	if histFile != "" {
-		appendToHistory([]string{histFile})
 	}
 }
