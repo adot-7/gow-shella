@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/chzyer/readline"
@@ -418,11 +419,13 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 	// var currStdIn io.WriteCloser
 	// fmt.Printf("%v: %d\n", pipeCommands, len(pipeCommands))
 	type pipeReaderWriter struct {
-		index int
-		r     io.Reader
-		w     io.Writer
+		r io.Reader
+		w io.WriteCloser
 	}
-	pipers := make(map[int]pipeReaderWriter, 2)
+
+	var piper pipeReaderWriter
+	var builtinWaitGroup sync.WaitGroup
+	// pipers := make(map[int]pipeReaderWriter, 2)
 	cmds := make([]*exec.Cmd, len(pipeCommands))
 
 	for i, currCommand := range pipeCommands {
@@ -439,9 +442,11 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 			cmds[i] = exec.Command("echo")
 			cmds[i].Path = "builtin" // weird approach ig lol but it might work, giving error
 			// cmds[i].Args = currCommand
-			rdr, wrt := io.Pipe()
-			pipers[i] = pipeReaderWriter{r: rdr, w: wrt}
-
+			// pipers[i] = pipeReaderWriter{r: rdr, w: wrt}
+			if i == 0 {
+				rdr, wrt := io.Pipe()
+				piper = pipeReaderWriter{r: rdr, w: wrt}
+			}
 		} else if len(currCommand) == 1 {
 			cmds[i] = exec.Command(currCommand[0])
 		} else {
@@ -455,7 +460,7 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 	// }
 	for i := 0; i <= len(cmds)-2; i++ {
 		if cmds[i].Path == "builtin" {
-			cmds[i+1].Stdin = pipers[0].r
+			cmds[i+1].Stdin = piper.r
 			continue
 		}
 		stdoutPipe, err := cmds[i].StdoutPipe()
@@ -475,13 +480,21 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 
 	for i := len(cmds) - 1; i >= 0; i-- { //starting reverse because:If you start the first command first, it might generate data and write to a pipe whose reading end hasn't opened yet
 		if cmds[i].Path == "builtin" {
-			go func() {
-				if i == 0 { // first pipe
-					executeCommand(pipeCommands[i][0], pipeCommands[i][1:], builtinCommands, pipers[0].w, os.Stderr, prefixCompleter)
-				} else {
-					executeCommand(pipeCommands[i][0], pipeCommands[i][1:], builtinCommands, os.Stdout, os.Stderr, prefixCompleter)
+			builtinWaitGroup.Add(1)
+			go func(idx int) {
+				defer builtinWaitGroup.Done()
+				if idx == 0 { // first pipe
+					if !(cmds[idx+1].Path == "builtin") {
+						executeCommand(pipeCommands[idx][0], pipeCommands[idx][1:], builtinCommands, piper.w, os.Stderr, prefixCompleter)
+						piper.w.Close()
+
+					} else {
+						executeCommand(pipeCommands[idx][0], pipeCommands[idx][1:], builtinCommands, io.Discard, os.Stderr, prefixCompleter)
+					}
+					return
 				}
-			}()
+				executeCommand(pipeCommands[idx][0], pipeCommands[idx][1:], builtinCommands, os.Stdout, os.Stderr, prefixCompleter)
+			}(i)
 			continue
 		}
 		err := cmds[i].Start()
@@ -498,11 +511,13 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 			fmt.Printf("damn error: %v\n", err)
 		}
 	}
+	builtinWaitGroup.Wait()
 	// fmt.Printf("buffer: %v\n", b.Len())
 	// fmt.Fprintf(os.Stdout, "%s", b.String())
 	// time.Sleep(999999999)
 }
 func executeCommand(command string, argumentSlice []string, builtinCommands []string, outputWriter io.Writer, errorWriter io.Writer, prefixCompleter *readline.PrefixCompleter) {
+
 	switch command {
 	case "exit":
 		handleExit(outputWriter, "")
