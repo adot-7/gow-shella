@@ -17,7 +17,8 @@ import (
 //
 // )
 var executablesMap = make(map[string]string)
-var builtinCommands = []string{"exit", "echo", "type", "pwd", "cd", "complete", "jobs"}
+var builtinCommands = []string{"exit", "echo", "type", "pwd", "cd", "complete", "jobs", "history"}
+var history []string
 
 func filterInput(r rune) (rune, bool) {
 	switch r {
@@ -170,8 +171,10 @@ func main() {
 		}
 		// input = strings.TrimSuffix(input, "\n")
 		input = strings.TrimSpace(input)
+		history = append(history, input)
 		// inputs := strings.SplitN(input, " ", 2)
 		inputs := tokenize(input)
+
 		if len(inputs) >= 1 && inputs[len(inputs)-1] == "&" {
 			startJob(inputs, builtinCommands, completer)
 		} else {

@@ -337,6 +337,29 @@ func handleJobs(outputWriter io.Writer, showRunning bool) {
 	}
 }
 
+func handleHistory(arguments []string, outputWriter io.Writer) {
+	if len(arguments) == 1 {
+		lim, err := strconv.Atoi(arguments[0])
+		if err!=nil {
+			fmt.Fprintf(os.Stderr, "history: %s: numeric argument required\n", arguments[0])
+			return
+		}
+		if lim > len(history) {
+			for i, item := range history {
+				fmt.Fprintf(outputWriter, "\t%d:  %s\n", i+1, item)
+			}
+			return
+		}
+		for i := lim; i > 0; i-- {
+			fmt.Fprintf(outputWriter, "\t%d:  %s\n", len(history)-i+1, history[len(history)-i])
+		}
+		return
+	}
+	for i, item := range history {
+		fmt.Fprintf(outputWriter, "\t%d:  %s\n", i+1, item)
+	}
+}
+
 func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
 	isRedirect := false
 	isAppend := false
@@ -362,7 +385,7 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 				}
 				continue
 			} else {
-				fmt.Fprintf(os.Stderr, "Too many arguments after redirect\n")
+				fmt.Fprintf(os.Stderr, "Too many arguments\n")
 				return
 			}
 
@@ -548,6 +571,13 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 	case "jobs":
 		handleJobs(outputWriter, true)
 		return
+	case "history":
+		if len(argumentSlice) > 1{
+			fmt.Fprintln(os.Stderr, "history: numeric argument required")
+			return
+		}
+		handleHistory(argumentSlice, outputWriter)
+		return
 	case "":
 		return
 	}
@@ -570,7 +600,6 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 	// 	fmt.Fprintln(os.Stderr, err.Error())
 	// }
 }
-
 func tokenize(argument string) []string {
 	argument = strings.TrimSpace(argument)
 	var tokens []string
@@ -610,7 +639,6 @@ func tokenize(argument string) []string {
 	}
 	return tokens
 }
-
 func isExecutable(command string) (string, string) {
 	// paths := strings.SplitSeq(os.Getenv("PATH"), string(os.PathListSeparator))
 	// paths := strings.Split(os.Getenv("PATH"), string(os.PathListSeparator)) LESS EFFICIENT, as it populates a whole slice, whereas the above
