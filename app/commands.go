@@ -417,10 +417,32 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 	// var currStdOut io.ReadCloser
 	// var currStdIn io.WriteCloser
 	// fmt.Printf("%v: %d\n", pipeCommands, len(pipeCommands))
+	type pipeReaderWriter struct {
+		index int
+		r     io.Reader
+		w     io.Writer
+	}
+	pipers := make(map[int]pipeReaderWriter, 2)
 	cmds := make([]*exec.Cmd, len(pipeCommands))
+
 	for i, currCommand := range pipeCommands {
 		// cmd := exec.Command("/bin/bash", "-c", currCommand)
 		// var cmd *exec.Cmd
+		if slices.Contains(builtinCommands, currCommand[0]) && (i == 0 || i == len(pipeCommands)-1) { //first or last pipe command
+			// lets only do for the command being the first or the last in the pipeline
+			// if on last command, then exec., but how to connect the prev. cmd stdoutpipe to this
+			// command which simply takes the input, no pipe. maybe just pass the whole currCommand as input, no need to connect to pipe ig.
+			// yeah that might work.
+			// if not on last, then exec. but set the output writer to the next command's stdin.
+			// but i cannot exec. it just now, i have to somehow start it with other cmds.Start(). I can modify the cmd.Path to something and then check for it.
+			// fmt.Printf("adding '%v' to the pipers instead\n", currCommand)
+			cmds[i] = exec.Command("echo")
+			cmds[i].Path = "builtin" // weird approach ig lol but it might work, giving error
+			// cmds[i].Args = currCommand
+			rdr, wrt := io.Pipe()
+			pipers[i] = pipeReaderWriter{r: rdr, w: wrt}
+
+		}
 		if len(currCommand) == 1 {
 			cmds[i] = exec.Command(currCommand[0])
 		} else {
@@ -432,18 +454,37 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 	// if err != nil {
 	// 	fmt.Printf("damn error: %v\n", err)
 	// }
-
 	for i := 0; i <= len(cmds)-2; i++ {
+		if cmds[i].Path == "builtin" {
+			cmds[i+1].Stdin = pipers[0].r
+			continue
+		}
 		stdoutPipe, err := cmds[i].StdoutPipe()
 		if err != nil {
 			fmt.Printf("damn error: %v\n", err)
 		}
-		cmds[i+1].Stdin = stdoutPipe
+		if cmds[i+1].Path != "builtin" {
+			cmds[i+1].Stdin = stdoutPipe
+		} else {
+			//the builtin will not take any input from the prev. pipe?
+			continue
+		}
+		// TODO: what will happen to the output pipe of the command before the builtin command? since the builtin doesnt take any pipe, only direct input
 	}
 	// var b bytes.Buffer
 	cmds[len(cmds)-1].Stdout = os.Stdout
 
 	for i := len(cmds) - 1; i >= 0; i-- { //starting reverse because:If you start the first command first, it might generate data and write to a pipe whose reading end hasn't opened yet
+		if cmds[i].Path == "builtin" {
+			go func() {
+				if i == 0 { // first pipe
+					executeCommand(pipeCommands[i][0], pipeCommands[i][1:], builtinCommands, pipers[0].w, os.Stderr, prefixCompleter)
+				} else {
+					executeCommand(pipeCommands[i][0], pipeCommands[i][1:], builtinCommands, pipers[1].w, os.Stderr, prefixCompleter)
+
+				}
+			}()
+		}
 		err := cmds[i].Start()
 		if err != nil {
 			fmt.Printf("damn error: %v\n", err)
