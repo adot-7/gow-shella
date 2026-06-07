@@ -649,7 +649,9 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 			fmt.Printf("Parse Error: expected '}' token:%s\n", token)
 			return
 		}
-		arguments = append(arguments, token)
+		if token != "" {
+			arguments = append(arguments, token)
+		}
 	}
 	pipeArgs := slices.Concat([]string{command}, arguments)
 	// arguments = arguments[1:]
