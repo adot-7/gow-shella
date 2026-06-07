@@ -441,6 +441,65 @@ func handleHistory(arguments []string, outputWriter io.Writer) {
 
 }
 
+func handleDeclare(arguments []string, outputWriter io.Writer, errorWriter io.Writer) {
+	if arguments[0] == "-p" {
+		if len(arguments) != 2 {
+			fmt.Fprintln(errorWriter, "declare: too many arguments")
+			return
+		}
+		key := arguments[1]
+		value, ok := declareMap[key]
+		if !ok {
+			fmt.Fprintf(errorWriter, "declare: %s: not found\n", key)
+			return
+		}
+		fmt.Fprintf(outputWriter, "declare -- %s=\"%s\"\n", key, value)
+		return
+	}
+	parseStoreVariable(arguments[0], errorWriter)
+}
+func isDigit(r rune) bool {
+	return r >= '0' && r <= '9'
+}
+func isLetter(r rune) bool {
+	return (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z')
+}
+func parseStoreVariable(input string, errorWriter io.Writer) {
+	var (
+		key              string
+		value            string
+		equalEncountered = false
+		isValid          = true
+	)
+	var current strings.Builder
+	for i, ch := range input {
+		if ch == '=' && !equalEncountered {
+			key = current.String()
+			equalEncountered = true
+			continue
+		}
+		if equalEncountered {
+			current.WriteRune(ch)
+			continue
+		}
+		if (i == 0) && !(isLetter(ch) || ch == '_') { //first character
+			isValid = false
+			continue
+		}
+		if !isDigit(ch) && !isLetter(ch) && ch != '_' {
+			isValid = false
+			break
+		}
+		current.WriteRune(ch)
+	}
+	value = current.String()
+	if !isValid {
+		fmt.Fprintf(errorWriter, "declare: `%s': not a valid identifier\n", input)
+		return
+	}
+	declareMap[key] = value
+}
+
 func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
 	isRedirect := false
 	isAppend := false
@@ -658,6 +717,17 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 			return
 		}
 		handleHistory(argumentSlice, outputWriter)
+		return
+	case "declare":
+		switch {
+		case len(argumentSlice) > 2:
+			fmt.Fprintln(os.Stderr, "declare: too many arguments")
+			return
+		case len(argumentSlice) == 0:
+			fmt.Fprintln(os.Stderr, "declare: too few arguments")
+			return
+		}
+		handleDeclare(argumentSlice, outputWriter, errorWriter)
 		return
 	case "":
 		return

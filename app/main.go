@@ -17,9 +17,10 @@ import (
 //
 // )
 var executablesMap = make(map[string]string)
-var builtinCommands = []string{"exit", "echo", "type", "pwd", "cd", "complete", "jobs", "history"}
+var builtinCommands = []string{"exit", "echo", "type", "pwd", "cd", "complete", "jobs", "history", "declare"}
 var history []string
 var histFile = os.Getenv("HISTFILE")
+var declareMap = make(map[string]string)
 
 func filterInput(r rune) (rune, bool) {
 	switch r {
