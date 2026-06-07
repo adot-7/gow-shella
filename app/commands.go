@@ -346,17 +346,17 @@ func handleHistory(arguments []string, outputWriter io.Writer) {
 		}
 		if lim > len(history) {
 			for i, item := range history {
-				fmt.Fprintf(outputWriter, "\t%d:  %s\n", i+1, item)
+				fmt.Fprintf(outputWriter, "\t%d  %s\n", i+1, item)
 			}
 			return
 		}
 		for i := lim; i > 0; i-- {
-			fmt.Fprintf(outputWriter, "\t%d:  %s\n", len(history)-i+1, history[len(history)-i])
+			fmt.Fprintf(outputWriter, "\t%d  %s\n", len(history)-i+1, history[len(history)-i])
 		}
 		return
 	}
 	for i, item := range history {
-		fmt.Fprintf(outputWriter, "\t%d:  %s\n", i+1, item)
+		fmt.Fprintf(outputWriter, "\t%d  %s\n", i+1, item)
 	}
 }
 
