@@ -118,7 +118,7 @@ func listdirectories(path string) func(string) []string {
 func main() {
 	histFile := os.Getenv("HISTFILE")
 	if histFile != "" {
-		readFromHistory([]string{os.Getenv("HISTFILE")})
+		readFromHistory([]string{histFile})
 	}
 	// test()
 	loop := true
@@ -206,5 +206,8 @@ func main() {
 		// 	command =
 		// }
 		// executeCommand(command, arguments, builtinCommands, os.Stdout)
+	}
+	if histFile != "" {
+		appendToHistory([]string{histFile})
 	}
 }
