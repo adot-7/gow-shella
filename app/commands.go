@@ -511,6 +511,13 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 	command := inputs[0]
 	var arguments []string
 	for i, token := range inputs[1:] {
+		if token[0] == '$' {
+			value, ok := declareMap[token[1:]]
+			if !ok {
+				value = ""
+			}
+			token = value
+		}
 		if token == ">" || token == "1>" || token == ">>" || token == "1>>" || token == "2>" || token == "2>>" {
 			if i == len(inputs)-3 {
 				//means second last token
