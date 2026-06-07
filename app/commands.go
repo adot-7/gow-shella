@@ -360,6 +360,9 @@ func readFromHistory(arguments []string) {
 	lines := strings.Split(content, "\n")
 	lines = lines[:len(lines)-1] // account for empty line at end.
 	history = append(history, lines...)
+	if len(arguments) == 1 {
+		historyAppendIdx = len(history)
+	}
 }
 
 func writeToHistory(arguments []string) {
