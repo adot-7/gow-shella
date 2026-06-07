@@ -369,6 +369,12 @@ func appendToHistory(arguments []string) {
 }
 
 func handleHistory(arguments []string, outputWriter io.Writer) {
+	if len(arguments) == 0 {
+		for i, item := range history {
+			fmt.Fprintf(outputWriter, "\t%d  %s\n", i+1, item)
+			return
+		}
+	}
 	switch arguments[0] {
 	case "-r":
 		readFromHistory(arguments)
@@ -394,9 +400,7 @@ func handleHistory(arguments []string, outputWriter io.Writer) {
 		}
 		return
 	}
-	for i, item := range history {
-		fmt.Fprintf(outputWriter, "\t%d  %s\n", i+1, item)
-	}
+
 }
 
 func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
