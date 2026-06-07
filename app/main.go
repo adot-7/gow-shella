@@ -116,7 +116,10 @@ func listdirectories(path string) func(string) []string {
 }
 
 func main() {
-	readFromHistory([]string{os.Getenv("HISTFILE")})
+	histFile := os.Getenv("HISTFILE")
+	if histFile != "" {
+		readFromHistory([]string{os.Getenv("HISTFILE")})
+	}
 	// test()
 	loop := true
 	var completers []readline.PrefixCompleterInterface
