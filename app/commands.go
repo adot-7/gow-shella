@@ -444,7 +444,7 @@ func handleHistory(arguments []string, outputWriter io.Writer) {
 func handleDeclare(arguments []string, outputWriter io.Writer, errorWriter io.Writer) {
 	if arguments[0] == "-p" {
 		if len(arguments) != 2 {
-			fmt.Fprintln(errorWriter, "declare: too many arguments")
+			fmt.Fprintln(errorWriter, "declare: usage: declare -p <KEY>")
 			return
 		}
 		key := arguments[1]
@@ -463,6 +463,39 @@ func isDigit(r rune) bool {
 }
 func isLetter(r rune) bool {
 	return (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z')
+}
+
+func isValidKey(candidate string) int { //returns index of the end of key candidacy of the string, -1 if the first char itself is not allowed
+	// example:
+	// akash$ash$ a  t  o
+	// 0123456789 10 11 12
+	// ITER 1:
+	// dollarIdxFrom: 5
+	// isValidKey(ash$ato): 3
+	// token[dollarIdxFrom+1:dollarIdxFrom+1+isvalidkey] = token[6:9] = ash, let $ash = ash
+	// final = final + token[:5] + ash = ""+akash+ash=akashash
+	// now token: token[5+1+3:] = token[9:] = $ato
+	// ITER 2:
+	// dollarIdxFrom: 0
+	// isValidKey(ato): 3
+	// token[dollarIdxFrom+1:dollarIdxFrom+1+isvalidkey] = token[1:4] = ato, let $ato = ato
+	// final = final + token[:0] + ash = "akashash"+""+ato=akashashato
+	// new token: token[0+3+1:] = token[4:] = ""
+	var result int
+	for i, ch := range candidate {
+		result = i
+		if (i == 0) && !(isLetter(ch) || ch == '_') { //first character
+			result = i - 1
+			break
+		}
+		if !isDigit(ch) && !isLetter(ch) && ch != '_' {
+			result = i - 1
+			break
+		}
+		// fmt.Printf("%c is valid at i:%d\n", ch, i)
+	}
+
+	return result + 1
 }
 func parseStoreVariable(input string, errorWriter io.Writer) {
 	var (
@@ -498,7 +531,44 @@ func parseStoreVariable(input string, errorWriter io.Writer) {
 		fmt.Fprintf(errorWriter, "declare: `%s': not a valid identifier\n", input)
 		return
 	}
+	if !equalEncountered {
+		fmt.Fprintf(errorWriter, "declare: `%s': missing <VALUE>\n", input)
+		return
+	}
 	declareMap[key] = value
+}
+
+func iterKeySubstitue(token string) string {
+	c := strings.Count(token, "$")
+	if c == 0 {
+		return token
+	}
+	currentToken := token
+	final := ""
+	for i := range c {
+		dollarIdxFrom := strings.IndexRune(currentToken, '$')
+		if dollarIdxFrom != -1 {
+			validIdxTo := isValidKey(currentToken[dollarIdxFrom+1:]) // FIX: only upto before next $
+			k := currentToken[dollarIdxFrom+1 : dollarIdxFrom+1+validIdxTo]
+			value, ok := declareMap[k]
+			// fmt.Printf("map result: %s\n", value)
+			if !ok {
+				value = ""
+
+			}
+			final = final + currentToken[:dollarIdxFrom] + value
+			// fmt.Printf("Current token: %s\n", final)
+			if i == c-1 { //last iteration, will give out of bound for slicing so skip
+				if len(currentToken) > dollarIdxFrom+validIdxTo+1 {
+					final = final + currentToken[dollarIdxFrom+validIdxTo+1:]
+				} else {
+					continue
+				}
+			}
+			currentToken = currentToken[dollarIdxFrom+validIdxTo+1:]
+		}
+	}
+	return final
 }
 
 func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *readline.PrefixCompleter) {
@@ -511,13 +581,6 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 	command := inputs[0]
 	var arguments []string
 	for i, token := range inputs[1:] {
-		if token[0] == '$' {
-			value, ok := declareMap[token[1:]]
-			if !ok {
-				value = ""
-			}
-			token = value
-		}
 		if token == ">" || token == "1>" || token == ">>" || token == "1>>" || token == "2>" || token == "2>>" {
 			if i == len(inputs)-3 {
 				//means second last token
@@ -566,6 +629,9 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 			executeCommand(command, arguments, builtinCommands, outputWriter, os.Stderr, prefixCompleter)
 			return
 		}
+		// fmt.Printf("before sub: %s\n", token)
+		token = iterKeySubstitue(token)
+		// fmt.Printf("after sub: %s\n", token)
 		arguments = append(arguments, token)
 	}
 	pipeArgs := slices.Concat([]string{command}, arguments)
