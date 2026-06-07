@@ -442,8 +442,7 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 			rdr, wrt := io.Pipe()
 			pipers[i] = pipeReaderWriter{r: rdr, w: wrt}
 
-		}
-		if len(currCommand) == 1 {
+		} else if len(currCommand) == 1 {
 			cmds[i] = exec.Command(currCommand[0])
 		} else {
 			cmds[i] = exec.Command(currCommand[0], currCommand[1:]...)
@@ -480,10 +479,10 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 				if i == 0 { // first pipe
 					executeCommand(pipeCommands[i][0], pipeCommands[i][1:], builtinCommands, pipers[0].w, os.Stderr, prefixCompleter)
 				} else {
-					executeCommand(pipeCommands[i][0], pipeCommands[i][1:], builtinCommands, pipers[1].w, os.Stderr, prefixCompleter)
-
+					executeCommand(pipeCommands[i][0], pipeCommands[i][1:], builtinCommands, os.Stdout, os.Stderr, prefixCompleter)
 				}
 			}()
+			continue
 		}
 		err := cmds[i].Start()
 		if err != nil {
@@ -491,6 +490,9 @@ func parseTokens(inputs []string, builtinCommands []string, prefixCompleter *rea
 		}
 	}
 	for _, cmd := range cmds {
+		if cmd.Process == nil {
+			continue
+		}
 		err := cmd.Wait()
 		if err != nil {
 			fmt.Printf("damn error: %v\n", err)
