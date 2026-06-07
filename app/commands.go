@@ -609,8 +609,8 @@ func executeCommand(command string, argumentSlice []string, builtinCommands []st
 		handleJobs(outputWriter, true)
 		return
 	case "history":
-		if len(argumentSlice) > 1 {
-			fmt.Fprintln(os.Stderr, "history: numeric argument required")
+		if len(argumentSlice) > 2 {
+			fmt.Fprintln(os.Stderr, "history: too many arguments")
 			return
 		}
 		handleHistory(argumentSlice, outputWriter)
