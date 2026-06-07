@@ -475,6 +475,7 @@ func parseStoreVariable(input string, errorWriter io.Writer) {
 	for i, ch := range input {
 		if ch == '=' && !equalEncountered {
 			key = current.String()
+			current.Reset()
 			equalEncountered = true
 			continue
 		}
