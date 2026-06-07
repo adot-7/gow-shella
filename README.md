@@ -1,31 +1,27 @@
-[![progress-banner](https://backend.codecrafters.io/progress/shell/15ebb7bc-7ca3-4fb2-b6f8-dc99c4c6d284)](https://app.codecrafters.io/users/adot-7?r=2qF)
+Go(w)-Shell(a)
 
-This is a starting point for Go solutions to the
-["Build Your Own Shell" Challenge](https://app.codecrafters.io/courses/shell/overview).
+A minimal, completed Go solutions to the
+[Build-Your-Own-Shell](https://app.codecrafters.io/courses/shell/overview) challenge
 
-In this challenge, you'll build your own POSIX compliant shell that's capable of
-interpreting shell commands, running external programs and builtin commands like
-cd, pwd, echo and more. Along the way, you'll learn about shell command parsing,
-REPLs, builtin commands, and more.
+Overview
+- This repository contains a Go implementation of a POSIX-like shell.
+- Main entrypoint: app/main.go
 
-# Passing the first stage
+Requirements
+- Go 1.26 (or compatible Go toolchain)
 
-The entry point for your `shell` implementation is in `app/main.go`. Study and
-uncomment the relevant code, then run the command below to execute the tests on
-our servers:
+Run locally
+- Build:
+   - ``go build -o shell ./app``
+- Run:
+   - ``./shell``
+   - or ``./your_program.sh``
 
-```sh
-codecrafters submit
-```
+Tests
+- Run Go tests:
+   - ``go test ./...``
+- Submit to CodeCrafters:
+   - ``codecrafters submit``
 
-Time to move on to the next stage!
-
-# Stage 2 & beyond
-
-Note: This section is for stages 2 and beyond.
-
-1. Ensure you have `go (1.26)` installed locally
-1. Run `./your_program.sh` to run your program, which is implemented in
-   `app/main.go`.
-1. Run `codecrafters submit` to submit your solution to CodeCrafters. Test
-   output will be streamed to your terminal.
+Notes
+- Implementation and commands are in the app directory.
