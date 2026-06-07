@@ -1,5 +1,13 @@
-hi
-hi
-hi
-hi
-hi
+echo ayo
+echo hi
+history
+history -r test.txt
+history -w test.txt
+echo ayo
+echo hi
+history
+history -r test.txt
+history -w test.txt
+sleep 10 &
+history
+history -a test.txt

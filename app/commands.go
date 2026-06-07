@@ -354,30 +354,51 @@ func readFromHistory(arguments []string) {
 	history = append(history, lines...)
 }
 
+func writeToHistory(arguments []string) {
+	if len(arguments) < 2 {
+		fmt.Fprintln(os.Stderr, "history: insufficient arguments")
+		return
+	}
+	historyPath := arguments[1]
+	data := strings.Join(history, "\n")
+	data = data + "\n"
+	err := os.WriteFile(historyPath, []byte(data), 0644)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "history: cannot open history file")
+		return
+	}
+}
+
 func appendToHistory(arguments []string) {
-	// if len(arguments) < 2 {
-	// 	fmt.Fprintln(os.Stderr, "history: insufficient arguments")
-	// 	return
-	// }
-	// historyPath := arguments[1]
-	// data := strings.Join(history, "\n")
-	// f, err := os.WriteFile(historyPath)
-	// if err != nil {
-	// 	fmt.Fprintln(os.Stderr, "history: cannot open history file")
-	// 	return
-	// }
+	if len(arguments) < 2 {
+		fmt.Fprintln(os.Stderr, "history: insufficient arguments")
+		return
+	}
+	historyPath := arguments[1]
+	f, err := os.OpenFile(historyPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "history: cannot open history file")
+		return
+	}
+	data := strings.Join(history, "\n")
+	data = data + "\n"
+	f.Write([]byte(data))
+	f.Close()
 }
 
 func handleHistory(arguments []string, outputWriter io.Writer) {
 	if len(arguments) == 0 {
 		for i, item := range history {
 			fmt.Fprintf(outputWriter, "\t%d  %s\n", i+1, item)
-			return
 		}
+		return
 	}
 	switch arguments[0] {
 	case "-r":
 		readFromHistory(arguments)
+		return
+	case "-w":
+		writeToHistory(arguments)
 		return
 	case "-a":
 		appendToHistory(arguments)
